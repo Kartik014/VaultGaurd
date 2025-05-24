@@ -23,7 +23,7 @@ data class User (
     val password: String = "",
 
     @Column(nullable = false, unique = false)
-    val role: String = "",
+    var role: String = "",
 
     @Column(nullable = false, unique = false)
     val createdby: String = "",

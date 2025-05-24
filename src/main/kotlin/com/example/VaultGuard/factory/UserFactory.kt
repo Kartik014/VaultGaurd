@@ -14,7 +14,7 @@ class UserFactory(private val passwordEncoder: PasswordEncoder) {
             username = userDTO.username,
             email = userDTO.email,
             password = passwordEncoder.encode(userDTO.password),
-            role = userDTO.role,
+            role = userDTO.role.lowercase(),
             createdby = userDTO.createdby,
             mustchangepassword = userDTO.mustchangepassword
         )

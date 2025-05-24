@@ -7,5 +7,5 @@ data class UserDTO(
     val password: String = "",
     var role: String = "",
     var createdby: String = "",
-    val mustchangepassword: Boolean = false
+    var mustchangepassword: Boolean = false
 )

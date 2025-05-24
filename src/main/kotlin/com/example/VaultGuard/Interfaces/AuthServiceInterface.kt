@@ -7,4 +7,8 @@ import com.example.VaultGuard.models.User
 interface AuthServiceInterface {
 
     fun signUp(userDTO: UserDTO): ApiResponse<User>
+
+    fun logIn(userDTO: UserDTO): ApiResponse<String>
+
+    fun findByEmail(email: String): User?
 }

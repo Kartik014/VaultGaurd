@@ -26,4 +26,17 @@ class AuthController(private val authService: AuthServiceInterface) {
             throw Exception("Internal Server Error")
         }
     }
+
+    @PostMapping("/logIn")
+    fun logIn(@RequestBody userDTO: UserDTO): ResponseEntity<ApiResponse<String>>{
+
+        return try {
+            val loggedInUser = authService.logIn(userDTO)
+            ResponseEntity(loggedInUser, HttpStatus.OK)
+        } catch (e: IllegalArgumentException) {
+            throw IllegalArgumentException(e.message)
+        } catch (e: Exception) {
+            throw Exception("Internal Server Error")
+        }
+    }
 }
