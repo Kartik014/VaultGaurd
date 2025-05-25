@@ -56,4 +56,18 @@ class SuperAdminService(private val superAdminRepo: SuperAdminRepo, private val 
             data = updatedUser
         )
     }
+
+    override fun removeUser(userId: String): ApiResponse<List<User>> {
+        val userExisted = superAdminRepo.getUserById(userId)
+        if(userExisted == null){
+            throw IllegalArgumentException("User not found")
+        }
+        superAdminRepo.deleteById(userId)
+        val updatedUserList = superAdminRepo.findAll()
+        return ApiResponse(
+            status = "success",
+            message = "User removed successfully",
+            data = updatedUserList
+        )
+    }
 }

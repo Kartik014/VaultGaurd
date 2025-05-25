@@ -12,4 +12,6 @@ interface SuperAdminInterface {
     fun getAllUsers(): ApiResponse<List<User>>
 
     fun updateRole(roleDTO: RoleDTO): ApiResponse<User>
+
+    fun removeUser(userId: String): ApiResponse<List<User>>
 }

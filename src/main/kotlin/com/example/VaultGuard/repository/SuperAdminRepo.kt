@@ -11,4 +11,6 @@ interface SuperAdminRepo: JpaRepository<User, String> {
 
     fun getUserById(id: String): User?
 
+    override fun deleteById(id: String)
+
 }
