@@ -45,7 +45,7 @@ class DatabaseConnectionController(private val databaseConnectionService: Databa
     }
 
     @GetMapping("/connect/{dbid}")
-    fun connectDb(@PathVariable dbid: String): ResponseEntity<ApiResponse<Map<String, List<Map<String, Any>>>>> {
+    fun connectDb(@PathVariable dbid: String): ResponseEntity<ApiResponse<Map<String, Map<String, Any>>>> {
         return try {
             val connectedDbResult = databaseConnectionService.connectDb(dbid)
             ResponseEntity(connectedDbResult, HttpStatus.OK)

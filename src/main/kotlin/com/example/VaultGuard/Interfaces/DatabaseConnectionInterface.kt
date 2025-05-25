@@ -14,5 +14,5 @@ interface DatabaseConnectionInterface {
 
     fun getAllDb(): ApiResponse<List<DatabaseConnection>>
 
-    fun connectDb(dbid: String): ApiResponse<Map<String, List<Map<String, Any>>>>
+    fun connectDb(dbid: String): ApiResponse<Map<String, Map<String, Any>>>
 }

@@ -45,7 +45,7 @@ class DatabaseConnectionService(private val databaseConnectionRepo: DatabaseConn
         )
     }
 
-    override fun connectDb(dbid: String): ApiResponse<Map<String, List<Map<String, Any>>>> {
+    override fun connectDb(dbid: String): ApiResponse<Map<String, Map<String, Any>>> {
         val DbConnectionResult = databaseConnectionRepo.getDbData(dbid)
         return ApiResponse(
             status = "success",

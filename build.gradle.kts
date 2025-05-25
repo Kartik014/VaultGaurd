@@ -39,6 +39,11 @@ dependencies {
 	//PostgreSQL Dependencies
 	implementation("org.postgresql:postgresql:42.7.2")
 
+	//MongoDB Dependencies
+	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
+	implementation("org.mongodb:mongodb-driver-sync:4.10.2")
+	implementation("org.mongodb:mongodb-driver-core:4.10.2")
+
 	//JSON PARSER
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.0")
 
