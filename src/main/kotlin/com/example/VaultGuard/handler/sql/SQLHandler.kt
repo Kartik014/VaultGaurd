@@ -78,7 +78,6 @@ class SqlDatabaseHandler(private val aesUtils: AESUtils) : GenericHandlerInterfa
         return result
     }
 
-
     override fun fetchTableNames(db: DatabaseConnection): List<String> {
         val dbType = DbNames.valueOf(db.dbtype!!.uppercase())
         val dbUrl = when (dbType) {
