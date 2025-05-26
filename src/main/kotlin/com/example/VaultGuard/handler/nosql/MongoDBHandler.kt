@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets
 
 @Component
 class MongoDatabaseHandler(private val aesUtils: AESUtils): GenericHandlerInterface {
-    override fun connectAndFetchData(db: DatabaseConnection): Map<String, Map<String, Any>> {
+    override fun connectAndFetchData(db: DatabaseConnection, tablename: String): Map<String, Map<String, Any>> {
         val rawPassword = aesUtils.decrypt(db.password)
 
         val encodedUsername = URLEncoder.encode(db.username, StandardCharsets.UTF_8.toString())
@@ -23,18 +23,34 @@ class MongoDatabaseHandler(private val aesUtils: AESUtils): GenericHandlerInterf
 
         val result = mutableMapOf<String, Map<String, Any>>()
 
-        val collections = database.listCollectionNames().toList()
-
-        if (collections.isEmpty()) {
+        val collectionNames = database.listCollectionNames().toList()
+        if (collectionNames.isEmpty()) {
             result["message"] = mapOf("info" to "No collections found in the database!")
+        } else if (!collectionNames.contains(tablename)) {
+            result["message"] = mapOf("info" to "Collection '$tablename' not found in the database!")
         } else {
-            for (collection in collections) {
-                val docs = database.getCollection(collection).find().limit(100).map { it.toMap() }.toList()
-                result[collection] = mapOf("rows" to docs)
-            }
+            val docs = database.getCollection(tablename).find().limit(100).map { it.toMap() }.toList()
+            result[tablename] = mapOf("rows" to docs)
         }
 
         client.close()
         return result
+    }
+
+    override fun fetchTableNames(db: DatabaseConnection): List<String> {
+        val rawPassword = aesUtils.decrypt(db.password)
+
+        val encodedUsername = URLEncoder.encode(db.username, StandardCharsets.UTF_8.toString())
+        val encodedPassword = URLEncoder.encode(rawPassword, StandardCharsets.UTF_8.toString())
+
+        val uri = "mongodb+srv://${encodedUsername}:${encodedPassword}@${db.host}/?retryWrites=true&w=majority&appName=Cluster0"
+
+        val client = MongoClients.create(uri)
+        val database = client.getDatabase(db.dbname!!)
+
+        val collections = database.listCollectionNames().toList()
+
+        client.close()
+        return collections
     }
 }

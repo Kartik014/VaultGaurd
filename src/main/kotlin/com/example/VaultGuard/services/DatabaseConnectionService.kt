@@ -45,12 +45,21 @@ class DatabaseConnectionService(private val databaseConnectionRepo: DatabaseConn
         )
     }
 
-    override fun connectDb(dbid: String): ApiResponse<Map<String, Map<String, Any>>> {
+    override fun connectDb(dbid: String): ApiResponse<List<String>> {
         val DbConnectionResult = databaseConnectionRepo.getDbData(dbid)
         return ApiResponse(
             status = "success",
             message = "Database connected successfully",
             data = DbConnectionResult
+        )
+    }
+
+    override fun fetchTableData(dbid: String, tablename: String): ApiResponse<Map<String, Map<String, Any>>> {
+        val dbTableData = databaseConnectionRepo.fetchTableData(dbid, tablename)
+        return ApiResponse(
+            status = "success",
+            message = "Table data fetched successfully",
+            data = dbTableData
         )
     }
 }
