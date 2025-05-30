@@ -8,6 +8,7 @@ data class DatabaseBackupDTO(
     val backupid: String? = "",
     val userid: String? = "",
     val dbid: String? = "",
+    val policyname: String? = "",
     val selectedtables: List<String>? = null,
     val frequencycron: String? = DAILY.string(),
     val storagetype: String? = SUPABASE.string(),

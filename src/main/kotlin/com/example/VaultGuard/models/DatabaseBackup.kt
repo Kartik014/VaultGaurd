@@ -24,6 +24,9 @@ data class DatabaseBackup(
     val databaseConnection: DatabaseConnection = DatabaseConnection(),
 
     @Column(nullable = false, unique = false)
+    val policyname: String? = "",
+
+    @Column(nullable = false, unique = false)
     val selectedtables: String? = "all",
 
     @Column(nullable = false)

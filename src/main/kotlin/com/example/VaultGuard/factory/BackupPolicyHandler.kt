@@ -13,6 +13,7 @@ class BackupPolicyHandler {
             backupid = "backup_" + count + "_" + databaseBackupDTO.dbid,
             user = userRef,
             databaseConnection = databaseRef,
+            policyname = databaseBackupDTO.policyname,
             selectedtables = selectedTables,
             frequencycron = databaseBackupDTO.frequencycron!!,
             storagetype = databaseBackupDTO.storagetype!!,

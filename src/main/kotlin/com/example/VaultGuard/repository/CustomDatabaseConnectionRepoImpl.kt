@@ -20,4 +20,11 @@ class CustomDatabaseConnectionRepoImpl(private val entityManager: EntityManager,
 
         return databaseHandlerFactory.getHandler(db).connectAndFetchData(db, tablename)
     }
+
+    override fun connectAndFetchDataForBackup(dbid: String): DatabaseConnection {
+        val db = entityManager.find(DatabaseConnection::class.java, dbid)
+            ?: throw IllegalArgumentException("Database connection not found")
+
+        return db
+    }
 }
