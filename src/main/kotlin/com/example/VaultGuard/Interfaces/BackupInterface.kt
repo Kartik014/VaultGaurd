@@ -1,14 +1,14 @@
 package com.example.VaultGuard.Interfaces
 
-import com.example.VaultGuard.DTO.DatabaseBackupDTO
+import com.example.VaultGuard.DTO.DatabaseBackupPolicyDTO
 import com.example.VaultGuard.models.ApiResponse
-import com.example.VaultGuard.models.DatabaseBackup
+import com.example.VaultGuard.models.DatabaseBackupPolicy
 
 interface BackupInterface {
 
-    fun createBackupPolicy(databaseBackupDTO: DatabaseBackupDTO): ApiResponse<DatabaseBackup>
+    fun createBackupPolicy(databaseBackupPolicyDTO: DatabaseBackupPolicyDTO): ApiResponse<DatabaseBackupPolicy>
 
-    fun getBackupPolicies(dbid: String): ApiResponse<List<DatabaseBackup>>
+    fun getBackupPolicies(dbid: String): ApiResponse<List<DatabaseBackupPolicy>>
 
-    fun createBackup(dbid: String, databaseBackupDTO: DatabaseBackupDTO): ApiResponse<String>
+    fun createBackup(dbid: String, databaseBackupPolicyDTO: DatabaseBackupPolicyDTO): ApiResponse<String>
 }

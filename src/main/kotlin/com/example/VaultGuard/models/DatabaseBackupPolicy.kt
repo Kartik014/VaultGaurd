@@ -9,11 +9,11 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 
 @Entity
-@Table(name = "databasebackup")
-data class DatabaseBackup(
+@Table(name = "databasebackuppolicy")
+data class DatabaseBackupPolicy(
     @Id
     @Column(nullable = false, unique = true)
-    val backupid: String = "",
+    val policyid: String = "",
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "userid", nullable = false)

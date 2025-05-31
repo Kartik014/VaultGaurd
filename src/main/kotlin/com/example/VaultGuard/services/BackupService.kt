@@ -1,11 +1,11 @@
 package com.example.VaultGuard.services
 
-import com.example.VaultGuard.DTO.DatabaseBackupDTO
+import com.example.VaultGuard.DTO.DatabaseBackupPolicyDTO
 import com.example.VaultGuard.Interfaces.BackupInterface
 import com.example.VaultGuard.factory.BackupPolicyHandler
 import com.example.VaultGuard.factory.DumpServiceDispatcher
 import com.example.VaultGuard.models.ApiResponse
-import com.example.VaultGuard.models.DatabaseBackup
+import com.example.VaultGuard.models.DatabaseBackupPolicy
 import com.example.VaultGuard.models.DatabaseConnection
 import com.example.VaultGuard.models.User
 import com.example.VaultGuard.repository.BackupRepo
@@ -18,15 +18,15 @@ import org.springframework.stereotype.Service
 
 @Service
 class BackupService(private val storageService: StorageService, private val backupRepo: BackupRepo, private val backupPolicyHandler: BackupPolicyHandler, private val jwtUtils: JwtUtils, private val entityManager: EntityManager, private val dumpServiceDispatcher: DumpServiceDispatcher, private val databaseConnectionRepo: DatabaseConnectionRepo): BackupInterface {
-    override fun createBackupPolicy(databaseBackupDTO: DatabaseBackupDTO): ApiResponse<DatabaseBackup> {
+    override fun createBackupPolicy(databaseBackupPolicyDTO: DatabaseBackupPolicyDTO): ApiResponse<DatabaseBackupPolicy> {
         val userid = jwtUtils.getCurrentUserId()
         val userRef = entityManager.getReference(User::class.java, userid)
-        val databaseRef = entityManager.getReference(DatabaseConnection::class.java, databaseBackupDTO.dbid)
-        val selectedTables: String? = databaseBackupDTO.selectedtables?.joinToString(",") ?: "all"
+        val databaseRef = entityManager.getReference(DatabaseConnection::class.java, databaseBackupPolicyDTO.dbid)
+        val selectedTables: String? = databaseBackupPolicyDTO.selectedtables?.joinToString(",") ?: "all"
         var count = backupRepo.countByUser(userRef)
         count = count + 1
-        val newBackupPolicy = backupPolicyHandler.createPolicy(databaseBackupDTO, userRef, databaseRef, selectedTables!!, count)
-        val savedBackupPolicy: DatabaseBackup = backupRepo.save(newBackupPolicy)
+        val newBackupPolicy = backupPolicyHandler.createPolicy(databaseBackupPolicyDTO, userRef, databaseRef, selectedTables!!, count)
+        val savedBackupPolicy: DatabaseBackupPolicy = backupRepo.save(newBackupPolicy)
         return ApiResponse(
             status = "success",
             message = "Backup policy created successfully",
@@ -34,8 +34,8 @@ class BackupService(private val storageService: StorageService, private val back
         )
     }
 
-    override fun getBackupPolicies(dbid: String): ApiResponse<List<DatabaseBackup>> {
-        val backupPolicyList : List<DatabaseBackup> = backupRepo.findByDatabaseConnectionId(dbid)
+    override fun getBackupPolicies(dbid: String): ApiResponse<List<DatabaseBackupPolicy>> {
+        val backupPolicyList : List<DatabaseBackupPolicy> = backupRepo.findByDatabaseConnectionId(dbid)
         return ApiResponse(
             status = "success",
             message = "Backup policies fetched successfully",
@@ -43,8 +43,8 @@ class BackupService(private val storageService: StorageService, private val back
         )
     }
 
-    override fun createBackup(dbid: String, databaseBackupDTO: DatabaseBackupDTO): ApiResponse<String> {
-        val policy = backupRepo.findById(databaseBackupDTO.backupid!!).orElseThrow {
+    override fun createBackup(dbid: String, databaseBackupPolicyDTO: DatabaseBackupPolicyDTO): ApiResponse<String> {
+        val policy = backupRepo.findById(databaseBackupPolicyDTO.policyid!!).orElseThrow {
             IllegalArgumentException("Policy not found")
         }
         val userid = policy.user.id

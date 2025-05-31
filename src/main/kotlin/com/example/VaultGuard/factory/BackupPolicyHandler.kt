@@ -1,23 +1,23 @@
 package com.example.VaultGuard.factory
 
-import com.example.VaultGuard.DTO.DatabaseBackupDTO
-import com.example.VaultGuard.models.DatabaseBackup
+import com.example.VaultGuard.DTO.DatabaseBackupPolicyDTO
+import com.example.VaultGuard.models.DatabaseBackupPolicy
 import com.example.VaultGuard.models.DatabaseConnection
 import com.example.VaultGuard.models.User
 import org.springframework.stereotype.Component
 
 @Component
 class BackupPolicyHandler {
-    fun createPolicy(databaseBackupDTO: DatabaseBackupDTO, userRef: User, databaseRef: DatabaseConnection, selectedTables: String, count: Long): DatabaseBackup {
-        return DatabaseBackup(
-            backupid = "backup_" + count + "_" + databaseBackupDTO.dbid,
+    fun createPolicy(databaseBackupPolicyDTO: DatabaseBackupPolicyDTO, userRef: User, databaseRef: DatabaseConnection, selectedTables: String, count: Long): DatabaseBackupPolicy {
+        return DatabaseBackupPolicy(
+            policyid = "backup_" + count + "_" + databaseBackupPolicyDTO.dbid,
             user = userRef,
             databaseConnection = databaseRef,
-            policyname = databaseBackupDTO.policyname,
+            policyname = databaseBackupPolicyDTO.policyname,
             selectedtables = selectedTables,
-            frequencycron = databaseBackupDTO.frequencycron!!,
-            storagetype = databaseBackupDTO.storagetype!!,
-            isactive = databaseBackupDTO.isactive!!
+            frequencycron = databaseBackupPolicyDTO.frequencycron!!,
+            storagetype = databaseBackupPolicyDTO.storagetype!!,
+            isactive = databaseBackupPolicyDTO.isactive!!
         )
     }
 }

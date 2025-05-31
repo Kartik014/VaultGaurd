@@ -4,8 +4,8 @@ import com.example.VaultGuard.utils.ExtensionFunctions.string
 import com.example.VaultGuard.utils.enums.FrequencyCrons.DAILY
 import com.example.VaultGuard.utils.enums.StorageType.SUPABASE
 
-data class DatabaseBackupDTO(
-    val backupid: String? = "",
+data class DatabaseBackupPolicyDTO(
+    val policyid: String? = "",
     val userid: String? = "",
     val dbid: String? = "",
     val policyname: String? = "",

@@ -1,8 +1,8 @@
 package com.example.VaultGuard.controllers
 
-import com.example.VaultGuard.DTO.DatabaseBackupDTO
+import com.example.VaultGuard.DTO.DatabaseBackupPolicyDTO
 import com.example.VaultGuard.models.ApiResponse
-import com.example.VaultGuard.models.DatabaseBackup
+import com.example.VaultGuard.models.DatabaseBackupPolicy
 import com.example.VaultGuard.Interfaces.BackupInterface
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -20,9 +20,9 @@ class BackupController(private val backupService: BackupInterface) {
 
     @PostMapping("/v1/create-backup-policy")
     @PreAuthorize("hasAuthority('superadmin') or hasAuthority('admin')")
-    fun createBackupPolicy(@RequestBody databaseBackupDTO: DatabaseBackupDTO): ResponseEntity<ApiResponse<DatabaseBackup>> {
+    fun createBackupPolicy(@RequestBody databaseBackupPolicyDTO: DatabaseBackupPolicyDTO): ResponseEntity<ApiResponse<DatabaseBackupPolicy>> {
         return try {
-            val createdBackupPolicy = backupService.createBackupPolicy(databaseBackupDTO)
+            val createdBackupPolicy = backupService.createBackupPolicy(databaseBackupPolicyDTO)
             ResponseEntity(createdBackupPolicy,HttpStatus.OK)
         } catch (e: IllegalArgumentException) {
             throw IllegalArgumentException(e.message)
@@ -32,7 +32,7 @@ class BackupController(private val backupService: BackupInterface) {
     }
 
     @GetMapping("/v1/{dbid}/get-policy")
-    fun getBackupPolicies(@PathVariable dbid: String): ResponseEntity<ApiResponse<List<DatabaseBackup>>> {
+    fun getBackupPolicies(@PathVariable dbid: String): ResponseEntity<ApiResponse<List<DatabaseBackupPolicy>>> {
         return try {
             val backupPolicyList = backupService.getBackupPolicies(dbid)
             ResponseEntity(backupPolicyList,HttpStatus.OK)
@@ -44,9 +44,9 @@ class BackupController(private val backupService: BackupInterface) {
     }
 
     @GetMapping("/v1/{dbid}/create-backup")
-    fun createBackup(@PathVariable dbid: String, @RequestBody databaseBackupDTO: DatabaseBackupDTO): ResponseEntity<ApiResponse<String>>{
+    fun createBackup(@PathVariable dbid: String, @RequestBody databaseBackupPolicyDTO: DatabaseBackupPolicyDTO): ResponseEntity<ApiResponse<String>>{
         return try {
-            val backupLink = backupService.createBackup(dbid, databaseBackupDTO)
+            val backupLink = backupService.createBackup(dbid, databaseBackupPolicyDTO)
             ResponseEntity(backupLink, HttpStatus.OK)
         } catch (e: IllegalArgumentException) {
             throw IllegalArgumentException(e.message)
