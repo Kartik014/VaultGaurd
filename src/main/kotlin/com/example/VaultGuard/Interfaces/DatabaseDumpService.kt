@@ -7,5 +7,5 @@ interface DatabaseDumpService {
 
     fun supports(dbtype: String): Boolean
 
-    fun dumpDatabase(connection: DatabaseConnection, tables: List<String>, index: Long): File
+    fun dumpDatabase(connection: DatabaseConnection, tables: List<String>, index: Int): File
 }

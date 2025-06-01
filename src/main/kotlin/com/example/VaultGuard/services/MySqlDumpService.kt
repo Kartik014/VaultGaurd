@@ -11,7 +11,7 @@ class MySqlDumpService: DatabaseDumpService {
         return dbtype == DbNames.MYSQL.string()
     }
 
-    override fun dumpDatabase(connection: DatabaseConnection, tables: List<String>, index: Long): File {
+    override fun dumpDatabase(connection: DatabaseConnection, tables: List<String>, index: Int): File {
         val file = File("backupfile-${connection.dbid}-$index.sql")
         val tableArgs = if (tables.contains("all")) "" else tables.joinToString(" ")
         val command = listOf(

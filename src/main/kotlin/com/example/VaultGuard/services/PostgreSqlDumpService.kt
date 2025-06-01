@@ -14,7 +14,7 @@ class PostgreSqlDumpService(private val aesUtils: AESUtils): DatabaseDumpService
         return dbtype == DbNames.POSTGRES.string()
     }
 
-    override fun dumpDatabase(connection: DatabaseConnection, tables: List<String>, index: Long): File {
+    override fun dumpDatabase(connection: DatabaseConnection, tables: List<String>, index: Int): File {
         val file = File("backupfile-${connection.dbid}-$index.sql")
         val tableArgs = if (tables.contains("all")) emptyList() else tables.flatMap { listOf("-t", it) }
         val pass = aesUtils.decrypt(connection.password)

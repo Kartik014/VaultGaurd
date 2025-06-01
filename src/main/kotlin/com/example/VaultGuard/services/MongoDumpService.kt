@@ -11,7 +11,7 @@ class MongoDumpService: DatabaseDumpService {
         return dbtype == DbNames.MONGODB.string()
     }
 
-    override fun dumpDatabase(connection: DatabaseConnection, tables: List<String>, index: Long): File {
+    override fun dumpDatabase(connection: DatabaseConnection, tables: List<String>, index: Int): File {
         val dir = File("backupfile-${connection.dbid}-$index")
         dir.mkdirs()
 

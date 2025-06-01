@@ -54,4 +54,16 @@ class BackupController(private val backupService: BackupInterface) {
             throw Exception("Internal Server Error")
         }
     }
+
+    @GetMapping("/v1/{dbid}/list-backup-files")
+    fun listBackupFiles(@PathVariable dbid: String): ResponseEntity<ApiResponse<List<Map<String, Any>>>> {
+        return try {
+            val backupFiles = backupService.listBackupFiles(dbid)
+            ResponseEntity(backupFiles, HttpStatus.OK)
+        } catch (e: IllegalArgumentException) {
+            throw IllegalArgumentException(e.message)
+        } catch (e: Exception) {
+            throw Exception("Internal Server Error")
+        }
+    }
 }

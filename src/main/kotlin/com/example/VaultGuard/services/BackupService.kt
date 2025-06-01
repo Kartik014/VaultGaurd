@@ -15,9 +15,10 @@ import com.example.VaultGuard.utils.JwtUtils
 import com.example.VaultGuard.utils.enums.DbNames
 import jakarta.persistence.EntityManager
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.client.WebClient
 
 @Service
-class BackupService(private val storageService: StorageService, private val backupRepo: BackupRepo, private val backupPolicyHandler: BackupPolicyHandler, private val jwtUtils: JwtUtils, private val entityManager: EntityManager, private val dumpServiceDispatcher: DumpServiceDispatcher, private val databaseConnectionRepo: DatabaseConnectionRepo): BackupInterface {
+class BackupService(private val storageService: StorageService, private val backupRepo: BackupRepo, private val backupPolicyHandler: BackupPolicyHandler, private val jwtUtils: JwtUtils, private val entityManager: EntityManager, private val dumpServiceDispatcher: DumpServiceDispatcher, private val databaseConnectionRepo: DatabaseConnectionRepo, private val webClient: WebClient): BackupInterface {
     override fun createBackupPolicy(databaseBackupPolicyDTO: DatabaseBackupPolicyDTO): ApiResponse<DatabaseBackupPolicy> {
         val userid = jwtUtils.getCurrentUserId()
         val userRef = entityManager.getReference(User::class.java, userid)
@@ -51,7 +52,9 @@ class BackupService(private val storageService: StorageService, private val back
         val connection = databaseConnectionRepo.connectAndFetchDataForBackup(dbid)
         val tables = policy.selectedtables?.split(",")?.map { it.trim() } ?: listOf("all")
         val dumpService = dumpServiceDispatcher.getServiceFor(connection.dbtype!!.lowercase())
-        val backupFile = dumpService.dumpDatabase(connection, tables, 0)
+        val count = listBackupFiles(dbid)?.data?.size ?: 0
+        val index: Int = count + 1
+        val backupFile = dumpService.dumpDatabase(connection, tables, index)
         val byteArrayFile: ByteArray = backupFile.readBytes()
         val contentType: String = when (connection.dbtype.lowercase()) {
             DbNames.POSTGRES.string(), DbNames.MYSQL.string() -> "text/plain"
@@ -69,4 +72,60 @@ class BackupService(private val storageService: StorageService, private val back
             data = storageUrl
         )
     }
+
+    override fun listBackupFiles(dbid: String): ApiResponse<List<Map<String, Any>>>? {
+        val bucketName = "backups"
+        val userid = jwtUtils.getCurrentUserId()
+        val prefix = "$userid/$dbid/"
+        val requestBody = mapOf("prefix" to prefix)
+        return webClient.post()
+            .uri("/object/list/$bucketName")
+            .bodyValue(requestBody)
+            .retrieve()
+            .bodyToMono(List::class.java)
+            .map { rawList ->
+                (rawList as List<Map<String, Any>>).mapNotNull { fileMap ->
+                    val metadata = fileMap["metadata"] as? Map<*, *>
+                    val name = fileMap["name"] as? String
+                    val id = fileMap["id"] as? String
+                    val createdAt = fileMap["created_at"] as? String
+                    val size = (metadata?.get("size") as? Number)?.toLong()
+                    val mimetype = metadata?.get("mimetype") as? String
+                    if (name != null && id != null && createdAt != null && size != null && mimetype != null) {
+                        val readableSize = convertToReadableSize(size)
+                        mapOf(
+                            "name" to name,
+                            "id" to id,
+                            "created_at" to createdAt,
+                            "size" to readableSize,
+                            "mimetype" to mimetype
+                        )
+                    } else {
+                        null
+                    }
+                }
+            }
+            .map { fileList ->
+                ApiResponse(
+                    status = "success",
+                    message = "Backup files listed successfully",
+                    data = fileList
+                )
+            }
+            .block() as ApiResponse<List<Map<String, Any>>>?
+    }
+
+    private fun convertToReadableSize(bytes: Long): String {
+        val kb = 1024.0
+        val mb = kb * 1024
+        val gb = mb * 1024
+
+        return when {
+            bytes >= gb -> String.format("%.2f GB", bytes / gb)
+            bytes >= mb -> String.format("%.2f MB", bytes / mb)
+            bytes >= kb -> String.format("%.2f KB", bytes / kb)
+            else -> "$bytes B"
+        }
+    }
+
 }
