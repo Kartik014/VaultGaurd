@@ -62,6 +62,22 @@ kotlin {
 	}
 }
 
+tasks.register<Jar>("fatJar") {
+	group = "build"
+	archiveClassifier.set("fat")
+	manifest {
+		attributes(
+			"Main-Class" to "com.example.VaultGuard.ApplicationKt"
+		)
+	}
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	from(sourceSets.main.get().output)
+	dependsOn(configurations.runtimeClasspath)
+	from({
+		configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }
+	})
+}
+
 tasks.withType<Test> {
 	useJUnitPlatform()
 }
