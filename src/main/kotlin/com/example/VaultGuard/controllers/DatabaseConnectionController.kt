@@ -55,16 +55,4 @@ class DatabaseConnectionController(private val databaseConnectionService: Databa
             throw Exception("Internal Server Error")
         }
     }
-
-    @GetMapping("/connect/{dbid}/{tablename}")
-    fun fetchTableData(@PathVariable dbid: String, @PathVariable tablename: String): ResponseEntity<ApiResponse<Map<String, Map<String, Any>>>>{
-        return try {
-            val dbTableData = databaseConnectionService.fetchTableData(dbid, tablename)
-            ResponseEntity(dbTableData, HttpStatus.OK)
-        } catch (e: IllegalArgumentException){
-            throw IllegalArgumentException(e.message)
-        } catch (e: Exception) {
-            throw Exception("Internal Server Error")
-        }
-    }
 }

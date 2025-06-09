@@ -17,7 +17,7 @@ class SecurityConfig(private val jwtUtils: JwtUtils) {
     @Bean
     fun securityFilterChain(http: HttpSecurity, jwtAuthFilter: JwtAuthFilter): SecurityFilterChain {
         http.authorizeHttpRequests {
-            it.requestMatchers("/auth/**").permitAll()
+            it.requestMatchers("/auth/**", "/ws/**").permitAll()
             it.anyRequest().authenticated()
         }
             .csrf { csrf -> csrf.disable() }
