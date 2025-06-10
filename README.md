@@ -56,15 +56,15 @@ VaultGuard is a secure, extensible platform for managing database connections, u
 ```
 VaultGuard/
 ├── controllers/        # REST and WebSocket controllers
-├── services/          # Business logic and service layer
-├── repository/        # JPA repositories and custom DB logic
-├── factory/           # Factory classes for object and DB handler creation
-├── middlewares/       # Security filters (JWT)
-├── utils/             # Utility classes (JWT, enums, etc.)
-├── DTO/               # Data Transfer Objects for API requests/responses
-├── docker/            # Docker configuration files
-├── docs/              # Documentation
-└── resources/         # Application properties and static resources
+├── services/           # Business logic and service layer
+├── repository/         # JPA repositories and custom DB logic
+├── factory/            # Factory classes for object and DB handler creation
+├── middlewares/        # Security filters (JWT)
+├── utils/              # Utility classes (JWT, enums, etc.)
+├── DTO/                # Data Transfer Objects for API requests/responses
+├── docker/             # Docker configuration files
+├── docs/               # Documentation
+└── resources/          # Application properties and static resources
 ```
 
 ---
@@ -75,11 +75,11 @@ Create a `.env` file in the root directory with the following variables:
 
 | Variable                   | Description                        | Required |
 |----------------------------|------------------------------------|----------|
-| `DB_url`                   | JDBC URL for PostgreSQL           | Yes      |
+| `DB_url`                   | JDBC URL for PostgreSQL            | Yes      |
 | `DB_username`              | Database username                  | Yes      |
 | `DB_password`              | Database password                  | Yes      |
-| `SUPABASE_SERVICE_ROLE_KEY`| Supabase storage access key       | Yes      |
-| `encryption_secret`        | Encryption key for sensitive data | Yes      |
+| `SUPABASE_SERVICE_ROLE_KEY`| Supabase storage access key        | Yes      |
+| `encryption_secret`        | Encryption key for sensitive data  | Yes      |
 
 ### Example `.env` file:
 
@@ -387,7 +387,7 @@ ws://localhost:8080/ws
 ```
 
 #### Authentication
-Include the JWT token in the `Authorization` header during the WebSocket handshake.
+JWT authentication is enforced during the WebSocket handshake using a custom interceptor. Include the JWT token in the `Authorization` header during the handshake.
 
 #### Usage Example
 ```javascript
