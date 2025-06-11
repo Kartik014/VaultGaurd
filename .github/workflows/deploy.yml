@@ -55,11 +55,10 @@ jobs:
     steps:
       - name: Create .env from base64 secret
         run: |
-          if [ -z "${{ secrets.ENV_FILE }}" ]; then
-            echo "Error: ENV_FILE secret is missing or empty"
-            exit 1
-          fi
+          echo "Checking ENV_FILE secret (first 10 chars): ${${{ secrets.ENV_FILE }}:0:10}"
           echo "${{ secrets.ENV_FILE }}" | base64 -d > .env
+          echo "Created .env file with size: $(wc -c .env)"
+          cat .env
           [ -s .env ] || (echo "Error: .env is empty after decoding" && exit 1)
 
       - name: Create docker-compose.yml from base64 secret
