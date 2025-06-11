@@ -2,16 +2,17 @@ package com.example.VaultGuard.utils
 
 import com.example.VaultGuard.models.User
 import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.SignatureAlgorithm
+import io.jsonwebtoken.io.Decoders
 import io.jsonwebtoken.security.Keys
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 import java.util.Date
 import javax.crypto.SecretKey
 
 @Component
-class JwtUtils {
-    private val secretKey: SecretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256)
+class JwtUtils(@Value("\${JWT_SECRET_KEY}") secretKey: String) {
+    private val secretKey: SecretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey))
 
     fun generateToken(username: String, id: String, email: String, role: String): String {
 
