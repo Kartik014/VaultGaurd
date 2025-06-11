@@ -50,6 +50,7 @@ jobs:
     name: ⚙️ Prepare Config Files
     runs-on: ubuntu-latest
     needs: build
+    environment: production
 
     steps:
       - name: Create .env from base64 secret
@@ -78,6 +79,7 @@ jobs:
     name: 📦 Transfer Files to EC2
     runs-on: ubuntu-latest
     needs: [build, prepare-config]
+    environment: production
 
     steps:
       - name: Download Docker archive
@@ -110,6 +112,7 @@ jobs:
     name: 🚀 Deploy on EC2
     runs-on: ubuntu-latest
     needs: transfer
+    environment: production
 
     steps:
       - name: SSH into EC2 and deploy container
