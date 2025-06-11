@@ -20,6 +20,7 @@ VaultGuard is a secure, extensible platform for managing database connections, u
   - [WebSocket](#websocket)
 - [Response Format](#response-format)
 - [Security](#security)
+- [Deployment](#deployment)
 
 ---
 
@@ -80,6 +81,7 @@ Create a `.env` file in the root directory with the following variables:
 | `DB_password`              | Database password                  | Yes      |
 | `SUPABASE_SERVICE_ROLE_KEY`| Supabase storage access key        | Yes      |
 | `encryption_secret`        | Encryption key for sensitive data  | Yes      |
+| `JWT_SECRET_KEY`           | JWT signing key (base64)           | Yes      |
 
 ### Example `.env` file:
 
@@ -89,6 +91,7 @@ DB_username=your_db_user
 DB_password=your_db_password
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_key
 encryption_secret=your_encryption_secret_key
+JWT_SECRET_KEY=your_jwt_secret_base64
 ```
 
 ---
@@ -443,3 +446,13 @@ All API endpoints return a standardized response format:
 - **Data Encryption**: Sensitive data is encrypted using configurable encryption keys
 - **SQL Injection Protection**: Parameterized queries and JPA prevent SQL injection
 - **CORS Configuration**: Configurable CORS settings for web client integration
+
+---
+
+## Deployment
+
+- **Docker Compose:** See `docker-compose.yml`
+- **CI/CD:** GitHub Actions workflow in `.github/workflows/deploy.yml` builds, pushes, and deploys to EC2.
+- **Production:** Ensure `.env` and `docker-compose.yml` are securely provided via secrets.
+
+---
