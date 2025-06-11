@@ -78,7 +78,7 @@ jobs:
   transfer:
     name: 📦 Transfer Files to EC2
     runs-on: ubuntu-latest
-    needs: [build, prepare-config]
+    needs: [ build, prepare-config ]
     environment: production
 
     steps:
@@ -86,18 +86,21 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: docker-archive
+          path: .
 
       - name: Download Config Files
         uses: actions/download-artifact@v4
         with:
           name: config-files
+          path: .
 
       - name: Verify files
         run: |
-          ls -lh vaultguard-app.tar.gz .env docker-compose.yml
-          [ -s vaultguard-app.tar.gz ] || exit 1
-          [ -s .env ] || exit 1
-          [ -s docker-compose.yml ] || exit 1
+          echo "Verifying files:"
+          ls -lh
+          [ -s vaultguard-app.tar.gz ] || (echo "Missing vaultguard-app.tar.gz" && exit 1)
+          [ -s .env ] || (echo "Missing .env" && exit 1)
+          [ -s docker-compose.yml ] || (echo "Missing docker-compose.yml" && exit 1)
 
       - name: Copy files to EC2
         uses: appleboy/scp-action@v0.1.4
