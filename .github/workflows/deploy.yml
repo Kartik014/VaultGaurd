@@ -50,7 +50,6 @@ jobs:
     name: ⚙️ Prepare Config Files
     runs-on: ubuntu-latest
     needs: build
-    environment: production
 
     steps:
       - name: Create .env from base64 secret
@@ -60,8 +59,6 @@ jobs:
             exit 1
           fi
           echo "${{ secrets.ENV_FILE }}" | base64 -d > .env
-          echo "Created .env file with size: $(wc -c < .env)"
-          head -n 5 .env
           [ -s .env ] || (echo "Error: .env is empty after decoding" && exit 1)
 
       - name: Create docker-compose.yml from base64 secret
@@ -74,36 +71,31 @@ jobs:
         with:
           name: config-files
           path: |
-            ./.env
-            ./docker-compose.yml
+            .env
+            docker-compose.yml
 
   transfer:
     name: 📦 Transfer Files to EC2
     runs-on: ubuntu-latest
-    needs: [ build, prepare-config ]
-    environment: production
+    needs: [build, prepare-config]
 
     steps:
       - name: Download Docker archive
         uses: actions/download-artifact@v4
         with:
           name: docker-archive
-          path: .
 
       - name: Download Config Files
         uses: actions/download-artifact@v4
         with:
           name: config-files
-          path: .
 
-      - name: Verify downloaded artifacts
+      - name: Verify files
         run: |
-          echo "Files in directory:"
-          ls -la
-          echo "Checking file sizes:"
-          [ -s vaultguard-app.tar.gz ] || (echo "Missing vaultguard-app.tar.gz" && exit 1)
-          [ -s .env ] || (echo "Missing .env" && exit 1)
-          [ -s docker-compose.yml ] || (echo "Missing docker-compose.yml" && exit 1)
+          ls -lh vaultguard-app.tar.gz .env docker-compose.yml
+          [ -s vaultguard-app.tar.gz ] || exit 1
+          [ -s .env ] || exit 1
+          [ -s docker-compose.yml ] || exit 1
 
       - name: Copy files to EC2
         uses: appleboy/scp-action@v0.1.4
@@ -118,7 +110,6 @@ jobs:
     name: 🚀 Deploy on EC2
     runs-on: ubuntu-latest
     needs: transfer
-    environment: production
 
     steps:
       - name: SSH into EC2 and deploy container
