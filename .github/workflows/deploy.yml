@@ -30,13 +30,16 @@ jobs:
       - name: Save Docker image as archive
         run: docker save vaultguard-app:latest | gzip > vaultguard-app.tar.gz
 
-      - name: Create .env file from secret
-        run: echo "${{ secrets.ENV_FILE }}" > .env
+      - name: Create .env from base64 secret
+        run: echo "${{ secrets.ENV_FILE_B64 }}" | base64 -d > .env
 
-      - name: Create docker-compose.yml from secret
-        run: echo "${{ secrets.DOCKER_COMPOSE_YML }}" > docker-compose.yml
+      - name: Create docker-compose.yml from base64 secret
+        run: echo "${{ secrets.DOCKER_COMPOSE_YML_B64 }}" | base64 -d > docker-compose.yml
 
-      - name: Copy Docker image to EC2
+      - name: Verify required files exist
+        run: ls -l vaultguard-app.tar.gz .env docker-compose.yml
+
+      - name: Copy Docker image and configs to EC2
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.EC2_HOST }}
