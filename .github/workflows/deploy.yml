@@ -5,12 +5,21 @@ on:
     branches: [master]
 
 jobs:
-  deploy:
+  checkout:
+    name: 🔄 Checkout Source
     runs-on: ubuntu-latest
-    environment: production
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+  build:
+    name: 🛠️ Build Project
+    runs-on: ubuntu-latest
+    needs: checkout
+
+    steps:
+      - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Set up JDK
@@ -31,6 +40,18 @@ jobs:
       - name: Save Docker image as archive
         run: docker save vaultguard-app:latest | gzip > vaultguard-app.tar.gz
 
+      - name: Upload Docker archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-archive
+          path: vaultguard-app.tar.gz
+
+  prepare-config:
+    name: ⚙️ Prepare Config Files
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
       - name: Create .env from base64 secret
         run: |
           if [ -z "${{ secrets.ENV_FILE }}" ]; then
@@ -44,6 +65,30 @@ jobs:
         run: |
           echo "${{ secrets.DOCKER_COMPOSE_YML }}" | base64 -d > docker-compose.yml
           [ -s docker-compose.yml ] || (echo "Error: docker-compose.yml is empty" && exit 1)
+
+      - name: Upload config files
+        uses: actions/upload-artifact@v4
+        with:
+          name: config-files
+          path: |
+            .env
+            docker-compose.yml
+
+  transfer:
+    name: 📦 Transfer Files to EC2
+    runs-on: ubuntu-latest
+    needs: [build, prepare-config]
+
+    steps:
+      - name: Download Docker archive
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-archive
+
+      - name: Download Config Files
+        uses: actions/download-artifact@v4
+        with:
+          name: config-files
 
       - name: Verify files
         run: |
@@ -61,7 +106,13 @@ jobs:
           source: "vaultguard-app.tar.gz,.env,docker-compose.yml"
           target: /home/ubuntu/deploy
 
-      - name: Deploy on EC2
+  deploy:
+    name: 🚀 Deploy on EC2
+    runs-on: ubuntu-latest
+    needs: transfer
+
+    steps:
+      - name: SSH into EC2 and deploy container
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
