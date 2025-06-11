@@ -94,10 +94,11 @@ jobs:
           name: config-files
           path: .
 
-      - name: Verify files
+      - name: Verify downloaded artifacts
         run: |
-          echo "Verifying files:"
-          ls -lh
+          echo "Files in directory:"
+          ls -la
+          echo "Checking file sizes:"
           [ -s vaultguard-app.tar.gz ] || (echo "Missing vaultguard-app.tar.gz" && exit 1)
           [ -s .env ] || (echo "Missing .env" && exit 1)
           [ -s docker-compose.yml ] || (echo "Missing docker-compose.yml" && exit 1)
