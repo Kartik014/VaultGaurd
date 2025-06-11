@@ -41,6 +41,7 @@ jobs:
             .env
             docker-compose.yml
           target: /home/ubuntu/deploy
+          debug: true
 
       - name: SSH into EC2 and deploy container
         uses: appleboy/ssh-action@v1.0.0
