@@ -2,11 +2,10 @@ version: "3.8"
 
 services:
   app:
-    build:
-      context: .
+    image: vaultguard-app:latest
     container_name: vaultguard-app
-    ports:
-      - "8080:8080"
+    restart: always
     env_file:
       - .env
-    restart: unless-stopped
+    ports:
+      - "8080:8080"
