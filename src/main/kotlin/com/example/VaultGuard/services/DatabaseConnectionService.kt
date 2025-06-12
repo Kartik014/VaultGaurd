@@ -1,6 +1,7 @@
 package com.example.VaultGuard.services
 
 import com.example.VaultGuard.DTO.DbConnDTO
+import com.example.VaultGuard.DTO.DbUpdateEvent
 import com.example.VaultGuard.Interfaces.DatabaseConnectionInterface
 import com.example.VaultGuard.factory.DatabaseConnectionFactory
 import com.example.VaultGuard.models.ApiResponse
@@ -9,10 +10,16 @@ import com.example.VaultGuard.models.User
 import com.example.VaultGuard.repository.DatabaseConnectionRepo
 import com.example.VaultGuard.utils.JwtUtils
 import jakarta.persistence.EntityManager
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 
 @Service
 class DatabaseConnectionService(private val databaseConnectionRepo: DatabaseConnectionRepo, private val entityManager: EntityManager, private val databaseConnectionFactory: DatabaseConnectionFactory, private val jwtUtils: JwtUtils): DatabaseConnectionInterface {
+
+    @Autowired
+    lateinit var applicationEventPublisher: ApplicationEventPublisher
+
     override fun addDbConnection(dbConnDTO: DbConnDTO): ApiResponse<DatabaseConnection> {
         val userid = jwtUtils.getCurrentUserId()
         val userRef = entityManager.getReference(User::class.java, userid)
@@ -54,12 +61,9 @@ class DatabaseConnectionService(private val databaseConnectionRepo: DatabaseConn
         )
     }
 
-    override fun fetchTableData(dbid: String, tablename: String): ApiResponse<Map<String, Map<String, Any>>> {
+    override fun fetchTableData(userId: String, dbid: String, tablename: String) {
         val dbTableData = databaseConnectionRepo.fetchTableData(dbid, tablename)
-        return ApiResponse(
-            status = "success",
-            message = "Table data fetched successfully",
-            data = dbTableData
-        )
+
+        applicationEventPublisher.publishEvent(DbUpdateEvent(userId, dbid, tablename, dbTableData))
     }
 }

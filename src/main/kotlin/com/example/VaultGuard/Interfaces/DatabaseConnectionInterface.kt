@@ -16,5 +16,5 @@ interface DatabaseConnectionInterface {
 
     fun connectDb(dbid: String): ApiResponse<List<String>>
 
-    fun fetchTableData(dbid: String, tablename: String): ApiResponse<Map<String, Map<String, Any>>>
+    fun fetchTableData(userId: String, dbid: String, tablename: String)
 }
