@@ -71,5 +71,6 @@ jobs:
             cd ~/deploy
             docker rm -f vaultguard-app || true
             gunzip -c vaultguard-app.tar.gz | docker load
+            docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep -v 'vaultguard-app:latest' | awk '{print $2}' | xargs -r docker rmi -f
             docker-compose down
             docker-compose up -d
