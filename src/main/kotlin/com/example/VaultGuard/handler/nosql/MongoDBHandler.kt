@@ -1,23 +1,17 @@
 package com.example.VaultGuard.handler.nosql
 
+import com.example.VaultGuard.DTO.EditTableDTO
 import com.example.VaultGuard.Interfaces.GenericHandlerInterface
+import com.example.VaultGuard.factory.DatabaseConnectionFactory
 import com.example.VaultGuard.models.DatabaseConnection
-import com.example.VaultGuard.utils.AESUtils
 import com.mongodb.client.MongoClients
+import org.bson.Document
 import org.springframework.stereotype.Component
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 
 @Component
-class MongoDatabaseHandler(private val aesUtils: AESUtils): GenericHandlerInterface {
+class MongoDatabaseHandler(private val databaseConnectionFactory: DatabaseConnectionFactory): GenericHandlerInterface {
     override fun connectAndFetchData(db: DatabaseConnection, tablename: String): Map<String, Map<String, Any>> {
-        val rawPassword = aesUtils.decrypt(db.password)
-
-        val encodedUsername = URLEncoder.encode(db.username, StandardCharsets.UTF_8.toString())
-        val encodedPassword = URLEncoder.encode(rawPassword, StandardCharsets.UTF_8.toString())
-
-        val uri = "mongodb+srv://${encodedUsername}:${encodedPassword}@${db.host}/?retryWrites=true&w=majority&appName=Cluster0"
-
+        val uri = databaseConnectionFactory.connectMongoDb(db)
         val client = MongoClients.create(uri)
         val database = client.getDatabase(db.dbname!!)
 
@@ -38,12 +32,7 @@ class MongoDatabaseHandler(private val aesUtils: AESUtils): GenericHandlerInterf
     }
 
     override fun fetchTableNames(db: DatabaseConnection): List<String> {
-        val rawPassword = aesUtils.decrypt(db.password)
-
-        val encodedUsername = URLEncoder.encode(db.username, StandardCharsets.UTF_8.toString())
-        val encodedPassword = URLEncoder.encode(rawPassword, StandardCharsets.UTF_8.toString())
-
-        val uri = "mongodb+srv://${encodedUsername}:${encodedPassword}@${db.host}/?retryWrites=true&w=majority&appName=Cluster0"
+        val uri = databaseConnectionFactory.connectMongoDb(db)
 
         val client = MongoClients.create(uri)
         val database = client.getDatabase(db.dbname!!)
@@ -52,5 +41,32 @@ class MongoDatabaseHandler(private val aesUtils: AESUtils): GenericHandlerInterf
 
         client.close()
         return collections
+    }
+
+    override fun editDbData(db: DatabaseConnection, editTableDTO: EditTableDTO): Int {
+        val uri = databaseConnectionFactory.connectMongoDb(db)
+
+        val client = MongoClients.create(uri)
+        val database = client.getDatabase(db.dbname!!)
+        val collection = database.getCollection(editTableDTO.tablename)
+
+        val filter = Document(editTableDTO.rowidentifier)
+        val update = Document("\$set", Document(editTableDTO.columnupdates).toString())
+
+        val result = collection.updateMany(filter, update)
+        return result.modifiedCount.toInt()
+    }
+
+    override fun fetchEditedData(db: DatabaseConnection, editTableDTO: EditTableDTO): Map<String, Any> {
+        val uri = databaseConnectionFactory.connectMongoDb(db)
+
+        val client = MongoClients.create(uri)
+        val database = client.getDatabase(db.dbname!!)
+        val collection = database.getCollection(editTableDTO.tablename)
+
+        val filter = Document(editTableDTO.rowidentifier)
+        val result = collection.find(filter).firstOrNull()
+
+        return result?.toMap() ?: emptyMap()
     }
 }

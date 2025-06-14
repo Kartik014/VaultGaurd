@@ -2,6 +2,7 @@ package com.example.VaultGuard.services
 
 import com.example.VaultGuard.DTO.DbConnDTO
 import com.example.VaultGuard.DTO.DbUpdateEvent
+import com.example.VaultGuard.DTO.EditTableDTO
 import com.example.VaultGuard.Interfaces.DatabaseConnectionInterface
 import com.example.VaultGuard.factory.DatabaseConnectionFactory
 import com.example.VaultGuard.models.ApiResponse
@@ -65,5 +66,23 @@ class DatabaseConnectionService(private val databaseConnectionRepo: DatabaseConn
         val dbTableData = databaseConnectionRepo.fetchTableData(dbid, tablename)
 
         applicationEventPublisher.publishEvent(DbUpdateEvent(userId, dbid, tablename, dbTableData))
+    }
+
+    override fun editDbData(editTableDTO: EditTableDTO): ApiResponse<Map<String, Any>> {
+        val affectedRows = databaseConnectionRepo.editDbData(editTableDTO)
+        return ApiResponse(
+            status = "success",
+            message = "Database data updated successfully",
+            data = mapOf(
+                "type" to "edit_data",
+                "affectedRows" to affectedRows,
+                "timestamp" to System.currentTimeMillis()
+            )
+        )
+    }
+
+    override fun fetchEditedData(userId: String, editTableDTO: EditTableDTO) {
+        val editedData = databaseConnectionRepo.fetchEditedData(editTableDTO)
+        applicationEventPublisher.publishEvent(DbUpdateEvent(userId, editTableDTO.dbid, editTableDTO.tablename, editedData))
     }
 }

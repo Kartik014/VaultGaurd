@@ -1,6 +1,8 @@
 package com.example.VaultGuard.controllers
 
+import com.example.VaultGuard.DTO.BaseSocketDTO
 import com.example.VaultGuard.DTO.DbUpdateEvent
+import com.example.VaultGuard.DTO.EditTableDTO
 import com.example.VaultGuard.DTO.FetchTableDTO
 import com.example.VaultGuard.services.DatabaseConnectionService
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -56,10 +58,11 @@ class WebSocketController(private val objectMapper: ObjectMapper, private val da
         }
 
         try {
-            val receivedText = objectMapper.readValue(message.payload, FetchTableDTO::class.java)
+            val base = objectMapper.readValue(message.payload, BaseSocketDTO::class.java)
 
-            when (val type = receivedText.type!!) {
+            when (val type = base.type) {
                 "fetch_table" -> {
+                    val receivedText = objectMapper.readValue(message.payload, FetchTableDTO::class.java)
                     val dbid = receivedText.dbid ?: throw IllegalArgumentException("Database ID is required")
                     val tablename = receivedText.tablename ?: throw IllegalArgumentException("Table name is required")
                     val tableKey = "$dbid:$tablename"
@@ -78,6 +81,29 @@ class WebSocketController(private val objectMapper: ObjectMapper, private val da
                     } else {
                         throw IllegalArgumentException("Invalid database ID or table name")
                     }
+                }
+                "edit_data" -> {
+                    val receivedText = objectMapper.readValue(message.payload, EditTableDTO::class.java)
+                    val dbid = receivedText.dbid
+                    val tablename = receivedText.tablename
+                    val rowidentifier = receivedText.rowidentifier
+                    val columnupdates = receivedText.columnupdates
+
+                    val editTableDTO = EditTableDTO(
+                        type = "edit_data",
+                        dbid = dbid,
+                        tablename = tablename,
+                        rowidentifier = rowidentifier,
+                        columnupdates = columnupdates
+                    )
+
+                    val response = databaseConnectionService.editDbData(editTableDTO)
+                    sendToUser(userId, response)
+
+                    databaseConnectionService.fetchEditedData(userId, editTableDTO)
+                }
+                else -> {
+                    session.sendMessage(TextMessage("Unknown message type: $type"))
                 }
             }
         } catch (e: Exception) {

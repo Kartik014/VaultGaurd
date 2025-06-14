@@ -1,29 +1,24 @@
 package com.example.VaultGuard.handler.sql
 
+import com.example.VaultGuard.DTO.EditTableDTO
 import com.example.VaultGuard.Interfaces.GenericHandlerInterface
+import com.example.VaultGuard.factory.DatabaseConnectionFactory
 import com.example.VaultGuard.models.DatabaseConnection
-import com.example.VaultGuard.utils.AESUtils
+import com.example.VaultGuard.utils.ExtensionFunctions.string
 import com.example.VaultGuard.utils.enums.DbNames
-import java.sql.DriverManager
 import org.springframework.stereotype.Component
 
 @Component
-class SqlDatabaseHandler(private val aesUtils: AESUtils) : GenericHandlerInterface {
+class SqlDatabaseHandler(private val databaseConnectionFactory: DatabaseConnectionFactory) : GenericHandlerInterface {
     override fun connectAndFetchData(db: DatabaseConnection, tablename: String): Map<String, Map<String, Any>> {
-        val dbType = DbNames.valueOf(db.dbtype!!.uppercase())
-        val dbUrl = when (dbType) {
-            DbNames.POSTGRES -> "jdbc:postgresql://${db.host}:${db.port}/${db.dbname}"
-            DbNames.MYSQL -> "jdbc:mysql://${db.host}:${db.port}/${db.dbname}"
-            else -> throw IllegalArgumentException("Unsupported SQL DB: ${db.dbtype}")
-        }
+        val dbConn = databaseConnectionFactory.connectDb(db)
 
-        val schemaPattern = if (dbType == DbNames.POSTGRES) "public" else null
-        val decryptedPassword = aesUtils.decrypt(db.password)
+        val schemaPattern = if (db.dbtype!!.lowercase() == DbNames.POSTGRES.string()) "public" else null
 
         val result = mutableMapOf<String, Map<String, Any>>()
 
-        DriverManager.getConnection(dbUrl, db.username, decryptedPassword).use { connection ->
-            val metadata = connection.metaData
+        dbConn.use { connection ->
+            val metadata = connection!!.metaData
             val tableSchema = schemaPattern
 
             val pk = mutableSetOf<String>()
@@ -79,20 +74,13 @@ class SqlDatabaseHandler(private val aesUtils: AESUtils) : GenericHandlerInterfa
     }
 
     override fun fetchTableNames(db: DatabaseConnection): List<String> {
-        val dbType = DbNames.valueOf(db.dbtype!!.uppercase())
-        val dbUrl = when (dbType) {
-            DbNames.POSTGRES -> "jdbc:postgresql://${db.host}:${db.port}/${db.dbname}"
-            DbNames.MYSQL -> "jdbc:mysql://${db.host}:${db.port}/${db.dbname}"
-            else -> throw IllegalArgumentException("Unsupported SQL DB: ${db.dbtype}")
-        }
-
-        val schemaPattern = if (dbType == DbNames.POSTGRES) "public" else null
-        val decryptedPassword = aesUtils.decrypt(db.password)
+        val dbConn = databaseConnectionFactory.connectDb(db)
 
         val tableNames = mutableListOf<String>()
 
-        DriverManager.getConnection(dbUrl, db.username, decryptedPassword).use { connection ->
-            val metadata = connection.metaData
+        val schemaPattern = if (db.dbtype!!.lowercase() == DbNames.POSTGRES.string()) "public" else null
+        dbConn.use { connection ->
+            val metadata = connection!!.metaData
             val tables = metadata.getTables(null, schemaPattern, "%", arrayOf("TABLE"))
 
             while (tables.next()) {
@@ -102,6 +90,56 @@ class SqlDatabaseHandler(private val aesUtils: AESUtils) : GenericHandlerInterfa
         }
 
         return tableNames
+    }
+
+    override fun editDbData(db: DatabaseConnection, editTableDTO: EditTableDTO): Int {
+        val dbConn = databaseConnectionFactory.connectDb(db)
+
+        val whereClause = editTableDTO.rowidentifier.entries.joinToString(" AND ") { "${it.key} = ?" }
+        val setClause = editTableDTO.columnupdates.entries.joinToString(", ") { "${it.key} = ?" }
+
+        var rowsUpdated: Int = 0
+        val sql = "UPDATE ${editTableDTO.tablename} SET $setClause WHERE $whereClause"
+        dbConn.use { connection ->
+            connection!!.prepareStatement(sql).use { stmt ->
+                var i = 1
+
+                editTableDTO.columnupdates.values.forEach { value ->
+                    stmt.setObject(i++, value)
+                }
+
+                editTableDTO.rowidentifier.values.forEach { value ->
+                    stmt.setObject(i++, value)
+                }
+
+                rowsUpdated = stmt.executeUpdate()
+            }
+        }
+        return rowsUpdated
+    }
+
+    override fun fetchEditedData(db: DatabaseConnection, editTableDTO: EditTableDTO): Map<String, Any> {
+        val dbConn = databaseConnectionFactory.connectDb(db)
+
+        dbConn.use { connection ->
+            val whereClause = editTableDTO.rowidentifier.keys.joinToString(" AND ") { "$it = ?" }
+            val sql = "SELECT * FROM ${editTableDTO.tablename} WHERE $whereClause"
+            val stmt = connection!!.prepareStatement(sql)
+
+            editTableDTO.rowidentifier.values.forEachIndexed { i, value ->
+                stmt.setObject(i + 1, value)
+            }
+
+            val rs = stmt.executeQuery()
+            val meta = rs.metaData
+            return if (rs.next()) {
+                (1..meta.columnCount).associate { index ->
+                    meta.getColumnName(index) to rs.getObject(index)
+                }
+            } else {
+                emptyMap()
+            }
+        }
     }
 
 }

@@ -1,5 +1,6 @@
 package com.example.VaultGuard.repository
 
+import com.example.VaultGuard.DTO.EditTableDTO
 import com.example.VaultGuard.factory.DatabaseHandlerFactory
 import com.example.VaultGuard.models.DatabaseConnection
 import jakarta.persistence.EntityManager
@@ -26,5 +27,19 @@ class CustomDatabaseConnectionRepoImpl(private val entityManager: EntityManager,
             ?: throw IllegalArgumentException("Database connection not found")
 
         return db
+    }
+
+    override fun editDbData(editTableDTO: EditTableDTO): Int {
+        val db = entityManager.find(DatabaseConnection::class.java, editTableDTO.dbid)
+            ?: throw IllegalArgumentException("Database connection not found")
+
+        return databaseHandlerFactory.getHandler(db).editDbData(db, editTableDTO)
+    }
+
+    override fun fetchEditedData(editTableDTO: EditTableDTO): Map<String, Any> {
+        val db = entityManager.find(DatabaseConnection::class.java, editTableDTO.dbid)
+            ?: throw IllegalArgumentException("Database connection not found")
+
+        return databaseHandlerFactory.getHandler(db).fetchEditedData(db, editTableDTO)
     }
 }

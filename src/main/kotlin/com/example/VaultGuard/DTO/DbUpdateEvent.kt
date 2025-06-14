@@ -4,5 +4,5 @@ data class DbUpdateEvent(
     val userId: String,
     val dbId: String,
     val tablename: String,
-    val data: Map<String, Map<String, Any>>
+    val data: Any
 )
