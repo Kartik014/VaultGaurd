@@ -1,0 +1,70 @@
+name: "CodeQL Advanced"
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  schedule:
+    - cron: '24 1 * * 4'  # Weekly scan on Thursday at 1:24 AM UTC
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    # Use macOS runner for Swift, Linux for everything else
+    runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+
+    permissions:
+      # Required for CodeQL to upload results
+      security-events: write
+      # Required if using private packs
+      packages: read
+      # Recommended for private repos
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Scan GitHub Actions workflows (YAML)
+          - language: actions
+            build-mode: none
+
+          # Scan Java/Kotlin code with manual build
+          - language: java-kotlin
+            build-mode: manual
+
+    steps:
+    # ✅ 1️⃣ Checkout your code
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # ✅ 2️⃣ Setup JDK for Gradle build
+    - name: Setup JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    # ✅ 3️⃣ Initialize CodeQL with custom queries (security + quality)
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+        build-mode: ${{ matrix.build-mode }}
+        queries: +security-and-quality
+
+    # ✅ 4️⃣ If manual build, run your real Gradle build
+    - if: matrix.build-mode == 'manual'
+      name: Build project manually
+      shell: bash
+      run: |
+        echo "Running manual build for Java/Kotlin project..."
+        ./gradlew build
+
+    # ✅ 5️⃣ Run CodeQL analysis
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:${{ matrix.language }}"
