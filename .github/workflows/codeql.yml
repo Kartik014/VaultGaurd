@@ -57,8 +57,11 @@ jobs:
       name: Build project manually with Gradle
       shell: bash
       run: |
-        echo "Running manual Gradle build..."
-        ./gradlew build
+        echo "Running Gradle build with CI memory limits..."
+        export ORG_GRADLE_PROJECT_org_gradle_jvmargs="-Xmx3G"
+        export ORG_GRADLE_PROJECT_kotlin_daemon_jvmargs="-Xmx2G"
+        export ORG_GRADLE_PROJECT_org_gradle_workers_max=1
+        ./gradlew build --no-daemon
 
     # ✅ 5️⃣ Run CodeQL analysis
     - name: Perform CodeQL Analysis
