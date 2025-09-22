@@ -66,21 +66,18 @@ class WebSocketController(private val objectMapper: ObjectMapper, private val da
                     val dbid = receivedText.dbid ?: throw IllegalArgumentException("Database ID is required")
                     val tablename = receivedText.tablename ?: throw IllegalArgumentException("Table name is required")
                     val tableKey = "$dbid:$tablename"
-                    if(dbid != null && tablename != null) {
-                        userTableViewMap[userId]?.let { oldTableKey ->
-                            tableUserViewMap[oldTableKey]?.remove(userId)
-                            if(tableUserViewMap[oldTableKey]?.isEmpty() == true) {
-                                tableUserViewMap.remove(oldTableKey)
-                            }
+
+                    userTableViewMap[userId]?.let { oldTableKey ->
+                        tableUserViewMap[oldTableKey]?.remove(userId)
+                        if(tableUserViewMap[oldTableKey]?.isEmpty() == true) {
+                            tableUserViewMap.remove(oldTableKey)
                         }
-
-                        userTableViewMap[userId] = tableKey
-                        tableUserViewMap.computeIfAbsent(tableKey) { mutableSetOf() }.add(userId)
-
-                        databaseConnectionService.fetchTableData(userId, dbid, tablename)
-                    } else {
-                        throw IllegalArgumentException("Invalid database ID or table name")
                     }
+
+                    userTableViewMap[userId] = tableKey
+                    tableUserViewMap.computeIfAbsent(tableKey) { mutableSetOf() }.add(userId)
+
+                    databaseConnectionService.fetchTableData(userId, dbid, tablename)
                 }
                 "edit_data" -> {
                     val receivedText = objectMapper.readValue(message.payload, EditTableDTO::class.java)
