@@ -23,10 +23,10 @@ class BackupService(private val storageService: StorageService, private val back
         val userid = jwtUtils.getCurrentUserId()
         val userRef = entityManager.getReference(User::class.java, userid)
         val databaseRef = entityManager.getReference(DatabaseConnection::class.java, databaseBackupPolicyDTO.dbid)
-        val selectedTables: String? = databaseBackupPolicyDTO.selectedtables?.joinToString(",") ?: "all"
+        val selectedTables: String = databaseBackupPolicyDTO.selectedtables?.joinToString(",") ?: "all"
         var count = backupRepo.countByUser(userRef)
-        count = count + 1
-        val newBackupPolicy = backupPolicyHandler.createPolicy(databaseBackupPolicyDTO, userRef, databaseRef, selectedTables!!, count)
+        count += 1
+        val newBackupPolicy = backupPolicyHandler.createPolicy(databaseBackupPolicyDTO, userRef, databaseRef, selectedTables, count)
         val savedBackupPolicy: DatabaseBackupPolicy = backupRepo.save(newBackupPolicy)
         return ApiResponse(
             status = "success",

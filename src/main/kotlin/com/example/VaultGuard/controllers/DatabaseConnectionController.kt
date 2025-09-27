@@ -35,8 +35,8 @@ class DatabaseConnectionController(private val databaseConnectionService: Databa
     @PreAuthorize("hasAuthority('superadmin')")
     fun getAllDb(): ResponseEntity<ApiResponse<List<DatabaseConnection>>> {
         return try {
-            val DbConnectionList = databaseConnectionService.getAllDb()
-            ResponseEntity(DbConnectionList, HttpStatus.OK)
+            val dbConnectionList = databaseConnectionService.getAllDb()
+            ResponseEntity(dbConnectionList, HttpStatus.OK)
         } catch (e: IllegalArgumentException){
             throw IllegalArgumentException(e.message)
         } catch (e: Exception) {

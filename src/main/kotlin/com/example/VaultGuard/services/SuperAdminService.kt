@@ -39,10 +39,7 @@ class SuperAdminService(private val superAdminRepo: SuperAdminRepo, private val 
     }
 
     override fun updateRole(roleDTO: RoleDTO): ApiResponse<User> {
-        val existingUser = superAdminRepo.getUserById(roleDTO.userId!!)
-        if(existingUser == null){
-            throw IllegalArgumentException("No user found")
-        }
+        val existingUser = superAdminRepo.getUserById(roleDTO.userId!!) ?: throw IllegalArgumentException("No user found")
         val validRole = try {
             UserRoles.valueOf(roleDTO.newRole!!.uppercase())
         } catch (e: IllegalArgumentException) {
@@ -58,10 +55,7 @@ class SuperAdminService(private val superAdminRepo: SuperAdminRepo, private val 
     }
 
     override fun removeUser(userId: String): ApiResponse<List<User>> {
-        val userExisted = superAdminRepo.getUserById(userId)
-        if(userExisted == null){
-            throw IllegalArgumentException("User not found")
-        }
+        val userExisted = superAdminRepo.getUserById(userId) ?: throw IllegalArgumentException("User not found")
         superAdminRepo.deleteById(userId)
         val updatedUserList = superAdminRepo.findAll()
         return ApiResponse(
