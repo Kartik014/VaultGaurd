@@ -95,20 +95,20 @@ class SqlDatabaseHandler(private val databaseConnectionFactory: DatabaseConnecti
     override fun editDbData(db: DatabaseConnection, editTableDTO: EditTableDTO): Int {
         val dbConn = databaseConnectionFactory.connectDb(db)
 
-        val whereClause = editTableDTO.rowidentifier.entries.joinToString(" AND ") { "${it.key} = ?" }
-        val setClause = editTableDTO.columnupdates.entries.joinToString(", ") { "${it.key} = ?" }
+        val whereClause = editTableDTO.rowIdentifier.entries.joinToString(" AND ") { "${it.key} = ?" }
+        val setClause = editTableDTO.columnUpdates.entries.joinToString(", ") { "${it.key} = ?" }
 
         var rowsUpdated: Int = 0
-        val sql = "UPDATE ${editTableDTO.tablename} SET $setClause WHERE $whereClause"
+        val sql = "UPDATE ${editTableDTO.tableName} SET $setClause WHERE $whereClause"
         dbConn.use { connection ->
             connection!!.prepareStatement(sql).use { stmt ->
                 var i = 1
 
-                editTableDTO.columnupdates.values.forEach { value ->
+                editTableDTO.columnUpdates.values.forEach { value ->
                     stmt.setObject(i++, value)
                 }
 
-                editTableDTO.rowidentifier.values.forEach { value ->
+                editTableDTO.rowIdentifier.values.forEach { value ->
                     stmt.setObject(i++, value)
                 }
 
@@ -122,11 +122,11 @@ class SqlDatabaseHandler(private val databaseConnectionFactory: DatabaseConnecti
         val dbConn = databaseConnectionFactory.connectDb(db)
 
         dbConn.use { connection ->
-            val whereClause = editTableDTO.rowidentifier.keys.joinToString(" AND ") { "$it = ?" }
-            val sql = "SELECT * FROM ${editTableDTO.tablename} WHERE $whereClause"
+            val whereClause = editTableDTO.rowIdentifier.keys.joinToString(" AND ") { "$it = ?" }
+            val sql = "SELECT * FROM ${editTableDTO.tableName} WHERE $whereClause"
             val stmt = connection!!.prepareStatement(sql)
 
-            editTableDTO.rowidentifier.values.forEachIndexed { i, value ->
+            editTableDTO.rowIdentifier.values.forEachIndexed { i, value ->
                 stmt.setObject(i + 1, value)
             }
 

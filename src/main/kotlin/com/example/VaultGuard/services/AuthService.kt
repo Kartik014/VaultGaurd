@@ -19,17 +19,18 @@ class AuthService(private val authRepo: AuthRepo, private val userFactory: UserF
         if(authRepo.findByEmail(userDTO.email) != null){
             throw IllegalArgumentException("Email already registered")
         }
+
         var newUser: User
         var savedUser: User
+
         if(authRepo.count() == 0L){
             userDTO.role = UserRoles.SUPERADMIN.string()
-            userDTO.createdby = "self"
-            newUser = userFactory.createUser(userDTO)
-            savedUser = authRepo.save(newUser)
-        } else {
-            newUser = userFactory.createUser(userDTO)
-            savedUser = authRepo.save(newUser)
+            userDTO.createdBy = "self"
         }
+
+        newUser = userFactory.createUser(userDTO)
+        savedUser = authRepo.save(newUser)
+
         return ApiResponse(
             status = "success",
             message = "User ${savedUser.username} created successfully",
@@ -42,8 +43,10 @@ class AuthService(private val authRepo: AuthRepo, private val userFactory: UserF
         val password = userDTO.password
 
         authenticatorFactory.authenticate(email, password)
+
         val user = authRepo.findByEmail(email) ?: throw IllegalArgumentException("User not found")
         val token = jwtUtils.generateToken(user.username, user.id, user.email, user.role)
+
         return ApiResponse(
             status = "success",
             message = "LogIn Successful",

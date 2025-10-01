@@ -48,10 +48,10 @@ class MongoDatabaseHandler(private val databaseConnectionFactory: DatabaseConnec
 
         val client = MongoClients.create(uri)
         val database = client.getDatabase(db.dbname!!)
-        val collection = database.getCollection(editTableDTO.tablename)
+        val collection = database.getCollection(editTableDTO.tableName)
 
-        val filter = Document(editTableDTO.rowidentifier)
-        val update = Document("\$set", Document(editTableDTO.columnupdates).toString())
+        val filter = Document(editTableDTO.rowIdentifier)
+        val update = Document("\$set", Document(editTableDTO.columnUpdates).toString())
 
         val result = collection.updateMany(filter, update)
         return result.modifiedCount.toInt()
@@ -62,9 +62,9 @@ class MongoDatabaseHandler(private val databaseConnectionFactory: DatabaseConnec
 
         val client = MongoClients.create(uri)
         val database = client.getDatabase(db.dbname!!)
-        val collection = database.getCollection(editTableDTO.tablename)
+        val collection = database.getCollection(editTableDTO.tableName)
 
-        val filter = Document(editTableDTO.rowidentifier)
+        val filter = Document(editTableDTO.rowIdentifier)
         val result = collection.find(filter).firstOrNull()
 
         return result?.toMap() ?: emptyMap()

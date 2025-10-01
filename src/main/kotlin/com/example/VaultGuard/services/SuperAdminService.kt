@@ -18,10 +18,13 @@ class SuperAdminService(private val superAdminRepo: SuperAdminRepo, private val 
         if(superAdminRepo.findByEmail(userDTO.email) != null) {
             throw IllegalArgumentException("User already registered")
         }
-        userDTO.createdby = jwtUtils.getCurrentUserId()
-        userDTO.mustchangepassword = true
+
+        userDTO.createdBy = jwtUtils.getCurrentUserId()
+        userDTO.mustChangePassword = true
+
         val newUser: User = userFactory.createUser(userDTO)
         val savedUser: User = superAdminRepo.save(newUser)
+
         return ApiResponse(
             status = "success",
             message = "User created successfully",
@@ -31,6 +34,7 @@ class SuperAdminService(private val superAdminRepo: SuperAdminRepo, private val 
 
     override fun getAllUsers(): ApiResponse<List<User>> {
         val userList = superAdminRepo.findAll()
+
         return ApiResponse(
             status = "success",
             message = "users fetched successfully",
@@ -45,8 +49,11 @@ class SuperAdminService(private val superAdminRepo: SuperAdminRepo, private val 
         } catch (e: IllegalArgumentException) {
             throw IllegalArgumentException("Invalid role: ${roleDTO.newRole}")
         }
+
         existingUser.role = validRole.name.lowercase()
+
         val updatedUser = superAdminRepo.save(existingUser)
+
         return ApiResponse(
             status = "success",
             message = "user role updated successfully",
@@ -56,8 +63,10 @@ class SuperAdminService(private val superAdminRepo: SuperAdminRepo, private val 
 
     override fun removeUser(userId: String): ApiResponse<List<User>> {
         val userExisted = superAdminRepo.getUserById(userId) ?: throw IllegalArgumentException("User not found")
+
         superAdminRepo.deleteById(userId)
         val updatedUserList = superAdminRepo.findAll()
+
         return ApiResponse(
             status = "success",
             message = "User removed successfully",

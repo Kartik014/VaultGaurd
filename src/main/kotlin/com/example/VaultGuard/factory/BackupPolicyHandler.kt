@@ -10,14 +10,14 @@ import org.springframework.stereotype.Component
 class BackupPolicyHandler {
     fun createPolicy(databaseBackupPolicyDTO: DatabaseBackupPolicyDTO, userRef: User, databaseRef: DatabaseConnection, selectedTables: String, count: Long): DatabaseBackupPolicy {
         return DatabaseBackupPolicy(
-            policyid = "backup_" + count + "_" + databaseBackupPolicyDTO.dbid,
+            policyid = "backup_" + count + "_" + databaseBackupPolicyDTO.dbId,
             user = userRef,
             databaseConnection = databaseRef,
-            policyname = databaseBackupPolicyDTO.policyname,
+            policyname = databaseBackupPolicyDTO.policyName,
             selectedtables = selectedTables,
-            frequencycron = databaseBackupPolicyDTO.frequencycron!!,
-            storagetype = databaseBackupPolicyDTO.storagetype!!,
-            isactive = databaseBackupPolicyDTO.isactive!!
+            frequencycron = databaseBackupPolicyDTO.frequencyCron!!,
+            storagetype = databaseBackupPolicyDTO.storageType!!,
+            isactive = databaseBackupPolicyDTO.isActive!!
         )
     }
 }

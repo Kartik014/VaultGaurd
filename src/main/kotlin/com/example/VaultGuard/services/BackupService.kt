@@ -22,8 +22,8 @@ class BackupService(private val storageService: StorageService, private val back
     override fun createBackupPolicy(databaseBackupPolicyDTO: DatabaseBackupPolicyDTO): ApiResponse<DatabaseBackupPolicy> {
         val userid = jwtUtils.getCurrentUserId()
         val userRef = entityManager.getReference(User::class.java, userid)
-        val databaseRef = entityManager.getReference(DatabaseConnection::class.java, databaseBackupPolicyDTO.dbid)
-        val selectedTables: String = databaseBackupPolicyDTO.selectedtables?.joinToString(",") ?: "all"
+        val databaseRef = entityManager.getReference(DatabaseConnection::class.java, databaseBackupPolicyDTO.dbId)
+        val selectedTables: String = databaseBackupPolicyDTO.selectedTables?.joinToString(",") ?: "all"
         var count = backupRepo.countByUser(userRef)
         count += 1
         val newBackupPolicy = backupPolicyHandler.createPolicy(databaseBackupPolicyDTO, userRef, databaseRef, selectedTables, count)
@@ -45,7 +45,7 @@ class BackupService(private val storageService: StorageService, private val back
     }
 
     override fun createBackup(dbid: String, databaseBackupPolicyDTO: DatabaseBackupPolicyDTO): ApiResponse<String> {
-        val policy = backupRepo.findById(databaseBackupPolicyDTO.policyid!!).orElseThrow {
+        val policy = backupRepo.findById(databaseBackupPolicyDTO.policyId!!).orElseThrow {
             IllegalArgumentException("Policy not found")
         }
         val userid = policy.user.id

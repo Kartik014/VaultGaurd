@@ -11,12 +11,12 @@ class UserFactory(private val passwordEncoder: PasswordEncoder) {
     fun createUser(userDTO: UserDTO): User{
         return User(
             id = UUID.randomUUID().toString(),
-            username = userDTO.username,
+            username = userDTO.userName,
             email = userDTO.email,
             password = passwordEncoder.encode(userDTO.password),
             role = userDTO.role.lowercase(),
-            createdby = userDTO.createdby,
-            mustchangepassword = userDTO.mustchangepassword
+            createdby = userDTO.createdBy,
+            mustchangepassword = userDTO.mustChangePassword
         )
     }
 }

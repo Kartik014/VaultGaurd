@@ -63,8 +63,8 @@ class WebSocketController(private val objectMapper: ObjectMapper, private val da
             when (val type = base.type) {
                 "fetch_table" -> {
                     val receivedText = objectMapper.readValue(message.payload, FetchTableDTO::class.java)
-                    val dbid = receivedText.dbid ?: throw IllegalArgumentException("Database ID is required")
-                    val tablename = receivedText.tablename ?: throw IllegalArgumentException("Table name is required")
+                    val dbid = receivedText.dbId ?: throw IllegalArgumentException("Database ID is required")
+                    val tablename = receivedText.tableName ?: throw IllegalArgumentException("Table name is required")
                     val tableKey = "$dbid:$tablename"
 
                     userTableViewMap[userId]?.let { oldTableKey ->
@@ -81,17 +81,17 @@ class WebSocketController(private val objectMapper: ObjectMapper, private val da
                 }
                 "edit_data" -> {
                     val receivedText = objectMapper.readValue(message.payload, EditTableDTO::class.java)
-                    val dbid = receivedText.dbid
-                    val tablename = receivedText.tablename
-                    val rowidentifier = receivedText.rowidentifier
-                    val columnupdates = receivedText.columnupdates
+                    val dbid = receivedText.dbId
+                    val tablename = receivedText.tableName
+                    val rowidentifier = receivedText.rowIdentifier
+                    val columnupdates = receivedText.columnUpdates
 
                     val editTableDTO = EditTableDTO(
                         type = "edit_data",
-                        dbid = dbid,
-                        tablename = tablename,
-                        rowidentifier = rowidentifier,
-                        columnupdates = columnupdates
+                        dbId = dbid,
+                        tableName = tablename,
+                        rowIdentifier = rowidentifier,
+                        columnUpdates = columnupdates
                     )
 
                     val response = databaseConnectionService.editDbData(editTableDTO)
@@ -156,6 +156,6 @@ class WebSocketController(private val objectMapper: ObjectMapper, private val da
 
     @EventListener
     fun handleDbUpdateEvent(event: DbUpdateEvent) {
-        broadcastTableUpdate(event.tablename, event.dbId, event.data)
+        broadcastTableUpdate(event.tableName, event.dbId, event.data)
     }
 }

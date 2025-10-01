@@ -30,14 +30,14 @@ class CustomDatabaseConnectionRepoImpl(private val entityManager: EntityManager,
     }
 
     override fun editDbData(editTableDTO: EditTableDTO): Int {
-        val db = entityManager.find(DatabaseConnection::class.java, editTableDTO.dbid)
+        val db = entityManager.find(DatabaseConnection::class.java, editTableDTO.dbId)
             ?: throw IllegalArgumentException("Database connection not found")
 
         return databaseHandlerFactory.getHandler(db).editDbData(db, editTableDTO)
     }
 
     override fun fetchEditedData(editTableDTO: EditTableDTO): Map<String, Any> {
-        val db = entityManager.find(DatabaseConnection::class.java, editTableDTO.dbid)
+        val db = entityManager.find(DatabaseConnection::class.java, editTableDTO.dbId)
             ?: throw IllegalArgumentException("Database connection not found")
 
         return databaseHandlerFactory.getHandler(db).fetchEditedData(db, editTableDTO)

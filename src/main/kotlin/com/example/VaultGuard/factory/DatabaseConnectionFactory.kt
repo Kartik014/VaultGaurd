@@ -15,13 +15,13 @@ import java.sql.DriverManager
 class DatabaseConnectionFactory(private val aesUtils: AESUtils) {
     fun createDbConn(dbConnDTO: DbConnDTO, userRef: User, index: Long): DatabaseConnection{
         return DatabaseConnection(
-            dbid = dbConnDTO.userid + "_" + index,
+            dbid = dbConnDTO.userId + "_" + index,
             user = userRef,
-            dbtype = dbConnDTO.dbtype!!.lowercase(),
+            dbtype = dbConnDTO.dbType!!.lowercase(),
             host = dbConnDTO.host,
             port = dbConnDTO.port,
-            dbname = dbConnDTO.dbname,
-            username = dbConnDTO.username,
+            dbname = dbConnDTO.dbName,
+            username = dbConnDTO.userName,
             password = aesUtils.encrypt(dbConnDTO.password!!),
             ssl = dbConnDTO.ssl!!
         )

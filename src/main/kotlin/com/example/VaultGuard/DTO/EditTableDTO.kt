@@ -2,8 +2,8 @@ package com.example.VaultGuard.DTO
 
 data class EditTableDTO(
     val type: String,
-    val dbid: String,
-    val tablename: String,
-    val rowidentifier: Map<String, Any>,
-    val columnupdates: Map<String, Any>
+    val dbId: String,
+    val tableName: String,
+    val rowIdentifier: Map<String, Any>,
+    val columnUpdates: Map<String, Any>
 )

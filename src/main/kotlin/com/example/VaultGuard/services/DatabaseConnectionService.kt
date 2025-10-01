@@ -26,7 +26,7 @@ class DatabaseConnectionService(private val databaseConnectionRepo: DatabaseConn
         val userRef = entityManager.getReference(User::class.java, userid)
         val count = databaseConnectionRepo.countByUser(userRef)
         val index = count + 1
-        dbConnDTO.userid = userid
+        dbConnDTO.userId = userid
         val newDbConn: DatabaseConnection = databaseConnectionFactory.createDbConn(dbConnDTO, userRef, index)
         val savedDbConn: DatabaseConnection = databaseConnectionRepo.save(newDbConn)
         return ApiResponse(
@@ -53,8 +53,8 @@ class DatabaseConnectionService(private val databaseConnectionRepo: DatabaseConn
         )
     }
 
-    override fun connectDb(dbid: String): ApiResponse<List<String>> {
-        val dbConnectionResult = databaseConnectionRepo.getDbData(dbid)
+    override fun connectDb(dbId: String): ApiResponse<List<String>> {
+        val dbConnectionResult = databaseConnectionRepo.getDbData(dbId)
         return ApiResponse(
             status = "success",
             message = "Database connected successfully",
@@ -83,6 +83,6 @@ class DatabaseConnectionService(private val databaseConnectionRepo: DatabaseConn
 
     override fun fetchEditedData(userId: String, editTableDTO: EditTableDTO) {
         val editedData = databaseConnectionRepo.fetchEditedData(editTableDTO)
-        applicationEventPublisher.publishEvent(DbUpdateEvent(userId, editTableDTO.dbid, editTableDTO.tablename, editedData))
+        applicationEventPublisher.publishEvent(DbUpdateEvent(userId, editTableDTO.dbId, editTableDTO.tableName, editedData))
     }
 }
