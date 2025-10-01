@@ -2,6 +2,7 @@ package com.example.VaultGuard.handler.nosql
 
 import com.example.VaultGuard.DTO.AddRowDataDTO
 import com.example.VaultGuard.DTO.EditTableDTO
+import com.example.VaultGuard.DTO.FetchTableDTO
 import com.example.VaultGuard.DTO.RemoveRowDataDTO
 import com.example.VaultGuard.Interfaces.GenericHandlerInterface
 import com.example.VaultGuard.factory.DatabaseConnectionFactory
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class MongoDatabaseHandler(private val databaseConnectionFactory: DatabaseConnectionFactory): GenericHandlerInterface {
-    override fun connectAndFetchData(db: DatabaseConnection, tableName: String): Map<String, Map<String, Any>> {
+    override fun connectAndFetchData(db: DatabaseConnection, fetchTableDTO: FetchTableDTO): Map<String, Map<String, Any>> {
         val uri = databaseConnectionFactory.connectMongoDb(db)
 
         val client = MongoClients.create(uri)
@@ -22,13 +23,28 @@ class MongoDatabaseHandler(private val databaseConnectionFactory: DatabaseConnec
 
         val collectionNames = database.listCollectionNames().toList()
 
+        val tableName = fetchTableDTO.tableName.toString()
+        val page = fetchTableDTO.page
+        val limit = fetchTableDTO.limit
+        val offset = page * limit
+
         if (collectionNames.isEmpty()) {
             result["message"] = mapOf("info" to "No collections found in the database!")
         } else if (!collectionNames.contains(tableName)) {
             result["message"] = mapOf("info" to "Collection '$tableName' not found in the database!")
         } else {
-            val docs = database.getCollection(tableName).find().limit(100).map { it.toMap() }.toList()
+            val collection = database.getCollection(tableName)
+            val totalDocs = collection.countDocuments()
+            val docs = collection.find().skip(offset).limit(limit).map { it.toMap() }.toList()
+
             result[tableName] = mapOf("rows" to docs)
+            result["pagination"] = mapOf(
+                "totalRows" to totalDocs,
+                "page" to page,
+                "limit" to limit,
+                "hasPrevious" to (page > 0),
+                "hasNext" to ((offset + limit) < totalDocs)
+            )
         }
 
         client.close()

@@ -4,6 +4,7 @@ import com.example.VaultGuard.DTO.AddRowDataDTO
 import com.example.VaultGuard.DTO.DbConnDTO
 import com.example.VaultGuard.DTO.DbUpdateEvent
 import com.example.VaultGuard.DTO.EditTableDTO
+import com.example.VaultGuard.DTO.FetchTableDTO
 import com.example.VaultGuard.DTO.RemoveRowDataDTO
 import com.example.VaultGuard.Interfaces.DatabaseConnectionInterface
 import com.example.VaultGuard.factory.DatabaseConnectionFactory
@@ -69,10 +70,10 @@ class DatabaseConnectionService(private val databaseConnectionRepo: DatabaseConn
         )
     }
 
-    override fun fetchTableData(userId: String, dbId: String, tableName: String) {
-        val dbTableData = databaseConnectionRepo.fetchTableData(dbId, tableName)
+    override fun fetchTableData(userId: String, fetchTableDTO: FetchTableDTO) {
+        val dbTableData = databaseConnectionRepo.fetchTableData(fetchTableDTO)
 
-        applicationEventPublisher.publishEvent(DbUpdateEvent(userId, dbId, tableName, dbTableData))
+        applicationEventPublisher.publishEvent(DbUpdateEvent(userId, fetchTableDTO.dbId!!, fetchTableDTO.tableName!!, dbTableData))
     }
 
     override fun editDbData(editTableDTO: EditTableDTO): ApiResponse<Map<String, Any>> {

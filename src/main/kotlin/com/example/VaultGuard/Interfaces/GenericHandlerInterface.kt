@@ -2,11 +2,12 @@ package com.example.VaultGuard.Interfaces
 
 import com.example.VaultGuard.DTO.AddRowDataDTO
 import com.example.VaultGuard.DTO.EditTableDTO
+import com.example.VaultGuard.DTO.FetchTableDTO
 import com.example.VaultGuard.DTO.RemoveRowDataDTO
 import com.example.VaultGuard.models.DatabaseConnection
 
 interface GenericHandlerInterface {
-    fun connectAndFetchData(db: DatabaseConnection, tableName: String): Map<String, Map<String, Any>>
+    fun connectAndFetchData(db: DatabaseConnection, fetchTableDTO: FetchTableDTO): Map<String, Map<String, Any>>
 
     fun fetchTableNames(db: DatabaseConnection): List<String>
 

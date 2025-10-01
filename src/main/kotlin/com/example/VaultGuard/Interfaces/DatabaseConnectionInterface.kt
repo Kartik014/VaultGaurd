@@ -3,6 +3,7 @@ package com.example.VaultGuard.Interfaces
 import com.example.VaultGuard.DTO.AddRowDataDTO
 import com.example.VaultGuard.DTO.DbConnDTO
 import com.example.VaultGuard.DTO.EditTableDTO
+import com.example.VaultGuard.DTO.FetchTableDTO
 import com.example.VaultGuard.DTO.RemoveRowDataDTO
 import com.example.VaultGuard.models.ApiResponse
 import com.example.VaultGuard.models.DatabaseConnection
@@ -19,7 +20,7 @@ interface DatabaseConnectionInterface {
 
     fun connectDb(dbId: String): ApiResponse<List<String>>
 
-    fun fetchTableData(userId: String, dbId: String, tableName: String)
+    fun fetchTableData(userId: String, fetchTableDTO: FetchTableDTO)
 
     fun editDbData(editTableDTO: EditTableDTO): ApiResponse<Map<String, Any>>
 

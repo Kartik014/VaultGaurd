@@ -2,6 +2,7 @@ package com.example.VaultGuard.repository
 
 import com.example.VaultGuard.DTO.AddRowDataDTO
 import com.example.VaultGuard.DTO.EditTableDTO
+import com.example.VaultGuard.DTO.FetchTableDTO
 import com.example.VaultGuard.DTO.RemoveRowDataDTO
 import com.example.VaultGuard.factory.DatabaseHandlerFactory
 import com.example.VaultGuard.models.DatabaseConnection
@@ -17,11 +18,11 @@ class CustomDatabaseConnectionRepoImpl(private val entityManager: EntityManager,
         return databaseHandlerFactory.getHandler(db).fetchTableNames(db)
     }
 
-    override fun fetchTableData(dbId: String, tableName: String): Map<String, Map<String, Any>> {
-        val db = entityManager.find(DatabaseConnection::class.java, dbId)
+    override fun fetchTableData(fetchTableDTO: FetchTableDTO): Map<String, Map<String, Any>> {
+        val db = entityManager.find(DatabaseConnection::class.java, fetchTableDTO.dbId)
             ?: throw IllegalArgumentException("Database connection not found")
 
-        return databaseHandlerFactory.getHandler(db).connectAndFetchData(db, tableName)
+        return databaseHandlerFactory.getHandler(db).connectAndFetchData(db, fetchTableDTO)
     }
 
     override fun connectAndFetchDataForBackup(dbId: String): DatabaseConnection {

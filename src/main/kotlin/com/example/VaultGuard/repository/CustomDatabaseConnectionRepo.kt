@@ -2,13 +2,14 @@ package com.example.VaultGuard.repository
 
 import com.example.VaultGuard.DTO.AddRowDataDTO
 import com.example.VaultGuard.DTO.EditTableDTO
+import com.example.VaultGuard.DTO.FetchTableDTO
 import com.example.VaultGuard.DTO.RemoveRowDataDTO
 import com.example.VaultGuard.models.DatabaseConnection
 
 interface CustomDatabaseConnectionRepo {
     fun getDbData(dbId: String): List<String>
 
-    fun fetchTableData(dbId: String, tableName: String): Map<String, Map<String, Any>>
+    fun fetchTableData(fetchTableDTO: FetchTableDTO): Map<String, Map<String, Any>>
 
     fun connectAndFetchDataForBackup(dbId: String): DatabaseConnection
 

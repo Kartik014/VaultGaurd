@@ -2,6 +2,7 @@ package com.example.VaultGuard.handler.sql
 
 import com.example.VaultGuard.DTO.AddRowDataDTO
 import com.example.VaultGuard.DTO.EditTableDTO
+import com.example.VaultGuard.DTO.FetchTableDTO
 import com.example.VaultGuard.DTO.RemoveRowDataDTO
 import com.example.VaultGuard.Interfaces.GenericHandlerInterface
 import com.example.VaultGuard.factory.DatabaseConnectionFactory
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class SqlDatabaseHandler(private val databaseConnectionFactory: DatabaseConnectionFactory) : GenericHandlerInterface {
-    override fun connectAndFetchData(db: DatabaseConnection, tableName: String): Map<String, Map<String, Any>> {
+    override fun connectAndFetchData(db: DatabaseConnection, fetchTableDTO: FetchTableDTO): Map<String, Map<String, Any>> {
         val dbConn = databaseConnectionFactory.connectDb(db)
 
         val schemaPattern = when (db.dbtype!!.lowercase()) {
@@ -20,6 +21,10 @@ class SqlDatabaseHandler(private val databaseConnectionFactory: DatabaseConnecti
             DbNames.MYSQL.string() -> db.dbname
             else -> null
         }
+
+        val tableName = fetchTableDTO.tableName.toString()
+        val page = fetchTableDTO.page
+        val limit = fetchTableDTO.limit
 
         val result = mutableMapOf<String, Map<String, Any>>()
 
@@ -43,8 +48,14 @@ class SqlDatabaseHandler(private val databaseConnectionFactory: DatabaseConnecti
                 while (rs.next()) rs.getString("COLUMN_NAME")?.let { unique.add(it) }
             }
 
+            val countStmt = connection.createStatement()
+            val countRs = countStmt.executeQuery("SELECT COUNT(*) FROM \"$tableName\"")
+            countRs.next()
+            val totalRows = countRs.getInt(1)
+
             val stmt = connection.createStatement()
-            val rs = stmt.executeQuery("SELECT * FROM \"$tableName\" LIMIT 100")
+            val offset = page * limit
+            val rs = stmt.executeQuery("SELECT * FROM \"$tableName\" LIMIT $limit OFFSET $offset")
             val meta = rs.metaData
             val colCount = meta.columnCount
 
@@ -74,6 +85,13 @@ class SqlDatabaseHandler(private val databaseConnectionFactory: DatabaseConnecti
             }
 
             result[tableName] = mapOf("columns" to columns, "rows" to rows)
+            result["pagination"] = mapOf(
+                "totalRows" to totalRows,
+                "page" to page,
+                "limit" to limit,
+                "hasPrevious" to (page > 0),
+                "hasNext" to ((offset + limit) < totalRows)
+            )
         }
 
         dbConn!!.close()
