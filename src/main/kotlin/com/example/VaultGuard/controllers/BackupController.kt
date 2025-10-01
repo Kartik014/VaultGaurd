@@ -31,10 +31,10 @@ class BackupController(private val backupService: BackupInterface) {
         }
     }
 
-    @GetMapping("/v1/{dbid}/get-policy")
-    fun getBackupPolicies(@PathVariable dbid: String): ResponseEntity<ApiResponse<List<DatabaseBackupPolicy>>> {
+    @GetMapping("/v1/{dbId}/get-policy")
+    fun getBackupPolicies(@PathVariable dbId: String): ResponseEntity<ApiResponse<List<DatabaseBackupPolicy>>> {
         return try {
-            val backupPolicyList = backupService.getBackupPolicies(dbid)
+            val backupPolicyList = backupService.getBackupPolicies(dbId)
             ResponseEntity(backupPolicyList,HttpStatus.OK)
         } catch (e: IllegalArgumentException) {
             throw IllegalArgumentException(e.message)
@@ -43,10 +43,10 @@ class BackupController(private val backupService: BackupInterface) {
         }
     }
 
-    @GetMapping("/v1/{dbid}/create-backup")
-    fun createBackup(@PathVariable dbid: String, @RequestBody databaseBackupPolicyDTO: DatabaseBackupPolicyDTO): ResponseEntity<ApiResponse<String>>{
+    @GetMapping("/v1/{dbId}/create-backup")
+    fun createBackup(@PathVariable dbId: String, @RequestBody databaseBackupPolicyDTO: DatabaseBackupPolicyDTO): ResponseEntity<ApiResponse<String>>{
         return try {
-            val backupLink = backupService.createBackup(dbid, databaseBackupPolicyDTO)
+            val backupLink = backupService.createBackup(dbId, databaseBackupPolicyDTO)
             ResponseEntity(backupLink, HttpStatus.OK)
         } catch (e: IllegalArgumentException) {
             throw IllegalArgumentException(e.message)
@@ -55,10 +55,10 @@ class BackupController(private val backupService: BackupInterface) {
         }
     }
 
-    @GetMapping("/v1/{dbid}/list-backup-files")
-    fun listBackupFiles(@PathVariable dbid: String): ResponseEntity<ApiResponse<List<Map<String, Any>>>> {
+    @GetMapping("/v1/{dbId}/list-backup-files")
+    fun listBackupFiles(@PathVariable dbId: String): ResponseEntity<ApiResponse<List<Map<String, Any>>>> {
         return try {
-            val backupFiles = backupService.listBackupFiles(dbid)
+            val backupFiles = backupService.listBackupFiles(dbId)
             ResponseEntity(backupFiles, HttpStatus.OK)
         } catch (e: IllegalArgumentException) {
             throw IllegalArgumentException(e.message)

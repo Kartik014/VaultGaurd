@@ -63,9 +63,9 @@ class WebSocketController(private val objectMapper: ObjectMapper, private val da
             when (val type = base.type) {
                 "fetch_table" -> {
                     val receivedText = objectMapper.readValue(message.payload, FetchTableDTO::class.java)
-                    val dbid = receivedText.dbId ?: throw IllegalArgumentException("Database ID is required")
-                    val tablename = receivedText.tableName ?: throw IllegalArgumentException("Table name is required")
-                    val tableKey = "$dbid:$tablename"
+                    val dbId = receivedText.dbId ?: throw IllegalArgumentException("Database ID is required")
+                    val tableName = receivedText.tableName ?: throw IllegalArgumentException("Table name is required")
+                    val tableKey = "$dbId:$tableName"
 
                     userTableViewMap[userId]?.let { oldTableKey ->
                         tableUserViewMap[oldTableKey]?.remove(userId)
@@ -77,7 +77,7 @@ class WebSocketController(private val objectMapper: ObjectMapper, private val da
                     userTableViewMap[userId] = tableKey
                     tableUserViewMap.computeIfAbsent(tableKey) { mutableSetOf() }.add(userId)
 
-                    databaseConnectionService.fetchTableData(userId, dbid, tablename)
+                    databaseConnectionService.fetchTableData(userId, dbId, tableName)
                 }
                 "edit_data" -> {
                     val receivedText = objectMapper.readValue(message.payload, EditTableDTO::class.java)

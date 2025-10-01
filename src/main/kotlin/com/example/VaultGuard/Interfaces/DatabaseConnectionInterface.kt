@@ -15,9 +15,9 @@ interface DatabaseConnectionInterface {
 
     fun getAllDb(): ApiResponse<List<DatabaseConnection>>
 
-    fun connectDb(dbid: String): ApiResponse<List<String>>
+    fun connectDb(dbId: String): ApiResponse<List<String>>
 
-    fun fetchTableData(userId: String, dbid: String, tablename: String)
+    fun fetchTableData(userId: String, dbId: String, tableName: String)
 
     fun editDbData(editTableDTO: EditTableDTO): ApiResponse<Map<String, Any>>
 

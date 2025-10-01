@@ -44,10 +44,10 @@ class DatabaseConnectionController(private val databaseConnectionService: Databa
         }
     }
 
-    @GetMapping("/connect/{dbid}")
-    fun connectDb(@PathVariable dbid: String): ResponseEntity<ApiResponse<List<String>>> {
+    @GetMapping("/connect/{dbId}")
+    fun connectDb(@PathVariable dbId: String): ResponseEntity<ApiResponse<List<String>>> {
         return try {
-            val connectedDbResult = databaseConnectionService.connectDb(dbid)
+            val connectedDbResult = databaseConnectionService.connectDb(dbId)
             ResponseEntity(connectedDbResult, HttpStatus.OK)
         } catch (e: IllegalArgumentException){
             throw IllegalArgumentException(e.message)

@@ -7,8 +7,8 @@ import com.example.VaultGuard.utils.enums.DbNames
 import java.io.File
 
 class MongoDumpService: DatabaseDumpService {
-    override fun supports(dbtype: String): Boolean {
-        return dbtype == DbNames.MONGODB.string()
+    override fun supports(dbType: String): Boolean {
+        return dbType == DbNames.MONGODB.string()
     }
 
     override fun dumpDatabase(connection: DatabaseConnection, tables: List<String>, index: Int): File {

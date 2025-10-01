@@ -10,8 +10,8 @@ import java.io.File
 
 @Service
 class PostgreSqlDumpService(private val aesUtils: AESUtils): DatabaseDumpService {
-    override fun supports(dbtype: String): Boolean {
-        return dbtype == DbNames.POSTGRES.string()
+    override fun supports(dbType: String): Boolean {
+        return dbType == DbNames.POSTGRES.string()
     }
 
     override fun dumpDatabase(connection: DatabaseConnection, tables: List<String>, index: Int): File {

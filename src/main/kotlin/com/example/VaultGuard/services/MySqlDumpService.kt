@@ -7,8 +7,8 @@ import com.example.VaultGuard.utils.enums.DbNames
 import java.io.File
 
 class MySqlDumpService: DatabaseDumpService {
-    override fun supports(dbtype: String): Boolean {
-        return dbtype == DbNames.MYSQL.string()
+    override fun supports(dbType: String): Boolean {
+        return dbType == DbNames.MYSQL.string()
     }
 
     override fun dumpDatabase(connection: DatabaseConnection, tables: List<String>, index: Int): File {

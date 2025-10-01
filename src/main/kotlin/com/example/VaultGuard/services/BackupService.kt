@@ -35,8 +35,8 @@ class BackupService(private val storageService: StorageService, private val back
         )
     }
 
-    override fun getBackupPolicies(dbid: String): ApiResponse<List<DatabaseBackupPolicy>> {
-        val backupPolicyList : List<DatabaseBackupPolicy> = backupRepo.findByDatabaseConnectionId(dbid)
+    override fun getBackupPolicies(dbId: String): ApiResponse<List<DatabaseBackupPolicy>> {
+        val backupPolicyList : List<DatabaseBackupPolicy> = backupRepo.findByDatabaseConnectionId(dbId)
         return ApiResponse(
             status = "success",
             message = "Backup policies fetched successfully",
@@ -44,15 +44,15 @@ class BackupService(private val storageService: StorageService, private val back
         )
     }
 
-    override fun createBackup(dbid: String, databaseBackupPolicyDTO: DatabaseBackupPolicyDTO): ApiResponse<String> {
+    override fun createBackup(dbId: String, databaseBackupPolicyDTO: DatabaseBackupPolicyDTO): ApiResponse<String> {
         val policy = backupRepo.findById(databaseBackupPolicyDTO.policyId!!).orElseThrow {
             IllegalArgumentException("Policy not found")
         }
         val userid = policy.user.id
-        val connection = databaseConnectionRepo.connectAndFetchDataForBackup(dbid)
+        val connection = databaseConnectionRepo.connectAndFetchDataForBackup(dbId)
         val tables = policy.selectedtables?.split(",")?.map { it.trim() } ?: listOf("all")
         val dumpService = dumpServiceDispatcher.getServiceFor(connection.dbtype!!.lowercase())
-        val count = listBackupFiles(dbid)?.data?.size ?: 0
+        val count = listBackupFiles(dbId)?.data?.size ?: 0
         val index: Int = count + 1
         val backupFile = dumpService.dumpDatabase(connection, tables, index)
         val byteArrayFile: ByteArray = backupFile.readBytes()
@@ -62,8 +62,8 @@ class BackupService(private val storageService: StorageService, private val back
             else -> "application/json"
         }
         val storageUrl = when (policy.storagetype.lowercase()) {
-            "local" -> storageService.uploadFile(userid, dbid, backupFile.name, byteArrayFile, contentType).block()
-            "supabase" -> storageService.uploadFile(userid, dbid, backupFile.name, byteArrayFile, contentType).block()
+            "local" -> storageService.uploadFile(userid, dbId, backupFile.name, byteArrayFile, contentType).block()
+            "supabase" -> storageService.uploadFile(userid, dbId, backupFile.name, byteArrayFile, contentType).block()
             else -> throw IllegalArgumentException("Unknown storage type: ${policy.storagetype}")
         }
         return ApiResponse(
@@ -73,10 +73,10 @@ class BackupService(private val storageService: StorageService, private val back
         )
     }
 
-    override fun listBackupFiles(dbid: String): ApiResponse<List<Map<String, Any>>>? {
+    override fun listBackupFiles(dbId: String): ApiResponse<List<Map<String, Any>>>? {
         val bucketName = "backups"
-        val userid = jwtUtils.getCurrentUserId()
-        val prefix = "$userid/$dbid/"
+        val userId = jwtUtils.getCurrentUserId()
+        val prefix = "$userId/$dbId/"
         val requestBody = mapOf("prefix" to prefix)
         return webClient.post()
             .uri("/object/list/$bucketName")

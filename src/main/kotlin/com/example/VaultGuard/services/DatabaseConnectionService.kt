@@ -62,10 +62,10 @@ class DatabaseConnectionService(private val databaseConnectionRepo: DatabaseConn
         )
     }
 
-    override fun fetchTableData(userId: String, dbid: String, tablename: String) {
-        val dbTableData = databaseConnectionRepo.fetchTableData(dbid, tablename)
+    override fun fetchTableData(userId: String, dbId: String, tableName: String) {
+        val dbTableData = databaseConnectionRepo.fetchTableData(dbId, tableName)
 
-        applicationEventPublisher.publishEvent(DbUpdateEvent(userId, dbid, tablename, dbTableData))
+        applicationEventPublisher.publishEvent(DbUpdateEvent(userId, dbId, tableName, dbTableData))
     }
 
     override fun editDbData(editTableDTO: EditTableDTO): ApiResponse<Map<String, Any>> {

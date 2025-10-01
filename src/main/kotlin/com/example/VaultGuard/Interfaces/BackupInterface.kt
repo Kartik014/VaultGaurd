@@ -8,9 +8,9 @@ interface BackupInterface {
 
     fun createBackupPolicy(databaseBackupPolicyDTO: DatabaseBackupPolicyDTO): ApiResponse<DatabaseBackupPolicy>
 
-    fun getBackupPolicies(dbid: String): ApiResponse<List<DatabaseBackupPolicy>>
+    fun getBackupPolicies(dbId: String): ApiResponse<List<DatabaseBackupPolicy>>
 
-    fun createBackup(dbid: String, databaseBackupPolicyDTO: DatabaseBackupPolicyDTO): ApiResponse<String>
+    fun createBackup(dbId: String, databaseBackupPolicyDTO: DatabaseBackupPolicyDTO): ApiResponse<String>
 
-    fun listBackupFiles(dbid: String): ApiResponse<List<Map<String, Any>>>?
+    fun listBackupFiles(dbId: String): ApiResponse<List<Map<String, Any>>>?
 }
