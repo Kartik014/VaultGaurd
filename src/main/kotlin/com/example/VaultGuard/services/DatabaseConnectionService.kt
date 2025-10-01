@@ -1,8 +1,10 @@
 package com.example.VaultGuard.services
 
+import com.example.VaultGuard.DTO.AddRowDataDTO
 import com.example.VaultGuard.DTO.DbConnDTO
 import com.example.VaultGuard.DTO.DbUpdateEvent
 import com.example.VaultGuard.DTO.EditTableDTO
+import com.example.VaultGuard.DTO.RemoveRowDataDTO
 import com.example.VaultGuard.Interfaces.DatabaseConnectionInterface
 import com.example.VaultGuard.factory.DatabaseConnectionFactory
 import com.example.VaultGuard.models.ApiResponse
@@ -26,9 +28,12 @@ class DatabaseConnectionService(private val databaseConnectionRepo: DatabaseConn
         val userRef = entityManager.getReference(User::class.java, userid)
         val count = databaseConnectionRepo.countByUser(userRef)
         val index = count + 1
+
         dbConnDTO.userId = userid
+
         val newDbConn: DatabaseConnection = databaseConnectionFactory.createDbConn(dbConnDTO, userRef, index)
         val savedDbConn: DatabaseConnection = databaseConnectionRepo.save(newDbConn)
+
         return ApiResponse(
             status = "success",
             message = "Database information stored successfully",
@@ -46,6 +51,7 @@ class DatabaseConnectionService(private val databaseConnectionRepo: DatabaseConn
 
     override fun getAllDb(): ApiResponse<List<DatabaseConnection>> {
         val dbConnectionList: List<DatabaseConnection> = databaseConnectionRepo.findAll()
+
         return ApiResponse(
             status = "success",
             message = "All Databases fetched successfully",
@@ -55,6 +61,7 @@ class DatabaseConnectionService(private val databaseConnectionRepo: DatabaseConn
 
     override fun connectDb(dbId: String): ApiResponse<List<String>> {
         val dbConnectionResult = databaseConnectionRepo.getDbData(dbId)
+
         return ApiResponse(
             status = "success",
             message = "Database connected successfully",
@@ -70,6 +77,7 @@ class DatabaseConnectionService(private val databaseConnectionRepo: DatabaseConn
 
     override fun editDbData(editTableDTO: EditTableDTO): ApiResponse<Map<String, Any>> {
         val affectedRows = databaseConnectionRepo.editDbData(editTableDTO)
+
         return ApiResponse(
             status = "success",
             message = "Database data updated successfully",
@@ -81,8 +89,37 @@ class DatabaseConnectionService(private val databaseConnectionRepo: DatabaseConn
         )
     }
 
+    override fun addDataToDB(addRowDataDTO: AddRowDataDTO): ApiResponse<Map<String, Any>> {
+        val newData = databaseConnectionRepo.addDataToDB(addRowDataDTO)
+
+        return ApiResponse(
+            status = "success",
+            message = "Database data updated successfully",
+            data = mapOf(
+                "type" to "add_data",
+                "newData" to newData,
+                "timestamp" to System.currentTimeMillis()
+            )
+        )
+    }
+
+    override fun removeDataFromDB(removeRowDataDTO: RemoveRowDataDTO): ApiResponse<Map<String, Any>> {
+        val removeData = databaseConnectionRepo.removeDataFromDB(removeRowDataDTO)
+
+            return ApiResponse(
+                status = "success",
+                message = "Database data updated successfully",
+                data = mapOf(
+                    "type" to "remove_data",
+                    "removeData" to removeData,
+                    "timestamp" to System.currentTimeMillis()
+                )
+            )
+    }
+
     override fun fetchEditedData(userId: String, editTableDTO: EditTableDTO) {
         val editedData = databaseConnectionRepo.fetchEditedData(editTableDTO)
+
         applicationEventPublisher.publishEvent(DbUpdateEvent(userId, editTableDTO.dbId, editTableDTO.tableName, editedData))
     }
 }

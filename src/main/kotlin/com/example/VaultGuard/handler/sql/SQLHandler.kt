@@ -1,6 +1,8 @@
 package com.example.VaultGuard.handler.sql
 
+import com.example.VaultGuard.DTO.AddRowDataDTO
 import com.example.VaultGuard.DTO.EditTableDTO
+import com.example.VaultGuard.DTO.RemoveRowDataDTO
 import com.example.VaultGuard.Interfaces.GenericHandlerInterface
 import com.example.VaultGuard.factory.DatabaseConnectionFactory
 import com.example.VaultGuard.models.DatabaseConnection
@@ -10,10 +12,14 @@ import org.springframework.stereotype.Component
 
 @Component
 class SqlDatabaseHandler(private val databaseConnectionFactory: DatabaseConnectionFactory) : GenericHandlerInterface {
-    override fun connectAndFetchData(db: DatabaseConnection, tablename: String): Map<String, Map<String, Any>> {
+    override fun connectAndFetchData(db: DatabaseConnection, tableName: String): Map<String, Map<String, Any>> {
         val dbConn = databaseConnectionFactory.connectDb(db)
 
-        val schemaPattern = if (db.dbtype!!.lowercase() == DbNames.POSTGRES.string()) "public" else null
+        val schemaPattern = when (db.dbtype!!.lowercase()) {
+            DbNames.POSTGRES.string() -> "public"
+            DbNames.MYSQL.string() -> db.dbname
+            else -> null
+        }
 
         val result = mutableMapOf<String, Map<String, Any>>()
 
@@ -25,20 +31,20 @@ class SqlDatabaseHandler(private val databaseConnectionFactory: DatabaseConnecti
             val fk = mutableSetOf<String>()
             val unique = mutableSetOf<String>()
 
-            metadata.getPrimaryKeys(null, tableSchema, tablename).use { rs ->
+            metadata.getPrimaryKeys(null, tableSchema, tableName).use { rs ->
                 while (rs.next()) pk.add(rs.getString("COLUMN_NAME"))
             }
 
-            metadata.getImportedKeys(null, tableSchema, tablename).use { rs ->
+            metadata.getImportedKeys(null, tableSchema, tableName).use { rs ->
                 while (rs.next()) fk.add(rs.getString("FKCOLUMN_NAME"))
             }
 
-            metadata.getIndexInfo(null, tableSchema, tablename, true, false).use { rs ->
+            metadata.getIndexInfo(null, tableSchema, tableName, true, false).use { rs ->
                 while (rs.next()) rs.getString("COLUMN_NAME")?.let { unique.add(it) }
             }
 
             val stmt = connection.createStatement()
-            val rs = stmt.executeQuery("SELECT * FROM \"$tablename\" LIMIT 100")
+            val rs = stmt.executeQuery("SELECT * FROM \"$tableName\" LIMIT 100")
             val meta = rs.metaData
             val colCount = meta.columnCount
 
@@ -67,8 +73,10 @@ class SqlDatabaseHandler(private val databaseConnectionFactory: DatabaseConnecti
                 rows.add(row)
             }
 
-            result[tablename] = mapOf("columns" to columns, "rows" to rows)
+            result[tableName] = mapOf("columns" to columns, "rows" to rows)
         }
+
+        dbConn!!.close()
 
         return result
     }
@@ -78,7 +86,12 @@ class SqlDatabaseHandler(private val databaseConnectionFactory: DatabaseConnecti
 
         val tableNames = mutableListOf<String>()
 
-        val schemaPattern = if (db.dbtype!!.lowercase() == DbNames.POSTGRES.string()) "public" else null
+        val schemaPattern = when (db.dbtype!!.lowercase()) {
+            DbNames.POSTGRES.string() -> "public"
+            DbNames.MYSQL.string() -> db.dbname
+            else -> null
+        }
+
         dbConn.use { connection ->
             val metadata = connection!!.metaData
             val tables = metadata.getTables(null, schemaPattern, "%", arrayOf("TABLE"))
@@ -88,6 +101,8 @@ class SqlDatabaseHandler(private val databaseConnectionFactory: DatabaseConnecti
                 tableNames.add(tableName)
             }
         }
+
+        dbConn!!.close()
 
         return tableNames
     }
@@ -100,6 +115,7 @@ class SqlDatabaseHandler(private val databaseConnectionFactory: DatabaseConnecti
 
         var rowsUpdated: Int = 0
         val sql = "UPDATE ${editTableDTO.tableName} SET $setClause WHERE $whereClause"
+
         dbConn.use { connection ->
             connection!!.prepareStatement(sql).use { stmt ->
                 var i = 1
@@ -115,7 +131,52 @@ class SqlDatabaseHandler(private val databaseConnectionFactory: DatabaseConnecti
                 rowsUpdated = stmt.executeUpdate()
             }
         }
+
+        dbConn!!.close()
+
         return rowsUpdated
+    }
+
+    override fun addDataToDB(db: DatabaseConnection, addRowDataDTO: AddRowDataDTO): Boolean {
+        val dbConn = databaseConnectionFactory.connectDb(db)
+
+        val columns = addRowDataDTO.newData.keys.joinToString(", ")
+        val placeholders = addRowDataDTO.newData.keys.joinToString(", ") { "?" }
+
+        val sql = "INSERT INTO ${addRowDataDTO.tableName} ($columns) VALUES ($placeholders)"
+
+        dbConn.use { connection ->
+            connection!!.prepareStatement(sql).use { stmt ->
+                var i = 1
+
+                addRowDataDTO.newData.values.forEach { value ->
+                    stmt.setObject(i++, value)
+                }
+
+                stmt.executeUpdate()
+            }
+        }
+
+        dbConn!!.close()
+
+        return true
+    }
+
+    override fun removeDataFromDB(db: DatabaseConnection, removeRowDataDTO: RemoveRowDataDTO): Boolean {
+        val dbConn = databaseConnectionFactory.connectDb(db)
+
+        val sql = "DELETE FROM ${removeRowDataDTO.tableName} WHERE ${removeRowDataDTO.removeDataKey.columnName} = ?"
+
+        dbConn.use { connection ->
+            connection!!.prepareStatement(sql).use { stmt ->
+                stmt.setObject(1, removeRowDataDTO.removeDataKey.columnValue)
+                stmt.executeUpdate()
+            }
+        }
+
+        dbConn!!.close()
+
+        return true
     }
 
     override fun fetchEditedData(db: DatabaseConnection, editTableDTO: EditTableDTO): Map<String, Any> {
@@ -132,6 +193,9 @@ class SqlDatabaseHandler(private val databaseConnectionFactory: DatabaseConnecti
 
             val rs = stmt.executeQuery()
             val meta = rs.metaData
+
+            dbConn!!.close()
+
             return if (rs.next()) {
                 (1..meta.columnCount).associate { index ->
                     meta.getColumnName(index) to rs.getObject(index)

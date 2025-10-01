@@ -1,6 +1,8 @@
 package com.example.VaultGuard.handler.nosql
 
+import com.example.VaultGuard.DTO.AddRowDataDTO
 import com.example.VaultGuard.DTO.EditTableDTO
+import com.example.VaultGuard.DTO.RemoveRowDataDTO
 import com.example.VaultGuard.Interfaces.GenericHandlerInterface
 import com.example.VaultGuard.factory.DatabaseConnectionFactory
 import com.example.VaultGuard.models.DatabaseConnection
@@ -10,24 +12,27 @@ import org.springframework.stereotype.Component
 
 @Component
 class MongoDatabaseHandler(private val databaseConnectionFactory: DatabaseConnectionFactory): GenericHandlerInterface {
-    override fun connectAndFetchData(db: DatabaseConnection, tablename: String): Map<String, Map<String, Any>> {
+    override fun connectAndFetchData(db: DatabaseConnection, tableName: String): Map<String, Map<String, Any>> {
         val uri = databaseConnectionFactory.connectMongoDb(db)
+
         val client = MongoClients.create(uri)
         val database = client.getDatabase(db.dbname!!)
 
         val result = mutableMapOf<String, Map<String, Any>>()
 
         val collectionNames = database.listCollectionNames().toList()
+
         if (collectionNames.isEmpty()) {
             result["message"] = mapOf("info" to "No collections found in the database!")
-        } else if (!collectionNames.contains(tablename)) {
-            result["message"] = mapOf("info" to "Collection '$tablename' not found in the database!")
+        } else if (!collectionNames.contains(tableName)) {
+            result["message"] = mapOf("info" to "Collection '$tableName' not found in the database!")
         } else {
-            val docs = database.getCollection(tablename).find().limit(100).map { it.toMap() }.toList()
-            result[tablename] = mapOf("rows" to docs)
+            val docs = database.getCollection(tableName).find().limit(100).map { it.toMap() }.toList()
+            result[tableName] = mapOf("rows" to docs)
         }
 
         client.close()
+
         return result
     }
 
@@ -40,6 +45,7 @@ class MongoDatabaseHandler(private val databaseConnectionFactory: DatabaseConnec
         val collections = database.listCollectionNames().toList()
 
         client.close()
+
         return collections
     }
 
@@ -54,7 +60,42 @@ class MongoDatabaseHandler(private val databaseConnectionFactory: DatabaseConnec
         val update = Document("\$set", Document(editTableDTO.columnUpdates).toString())
 
         val result = collection.updateMany(filter, update)
+
+        client.close()
+
         return result.modifiedCount.toInt()
+    }
+
+    override fun addDataToDB(db: DatabaseConnection, addRowDataDTO: AddRowDataDTO): Boolean {
+        val uri = databaseConnectionFactory.connectMongoDb(db)
+
+        val client = MongoClients.create(uri)
+        val database = client.getDatabase(db.dbname!!)
+        val collection = database.getCollection(addRowDataDTO.tableName)
+
+        val doc = Document(addRowDataDTO.newData)
+
+        val result = collection.insertOne(doc)
+
+        client.close()
+
+        return true
+    }
+
+    override fun removeDataFromDB(db: DatabaseConnection, removeRowDataDTO: RemoveRowDataDTO): Boolean {
+        val uri = databaseConnectionFactory.connectMongoDb(db)
+
+        val client = MongoClients.create(uri)
+        val database = client.getDatabase(db.dbname!!)
+        val collection = database.getCollection(removeRowDataDTO.tableName)
+
+        val filter = Document(removeRowDataDTO.removeDataKey.columnName, removeRowDataDTO.removeDataKey.columnValue)
+
+        val result = collection.deleteOne(filter)
+
+        client.close()
+
+        return true
     }
 
     override fun fetchEditedData(db: DatabaseConnection, editTableDTO: EditTableDTO): Map<String, Any> {
@@ -66,6 +107,8 @@ class MongoDatabaseHandler(private val databaseConnectionFactory: DatabaseConnec
 
         val filter = Document(editTableDTO.rowIdentifier)
         val result = collection.find(filter).firstOrNull()
+
+        client.close()
 
         return result?.toMap() ?: emptyMap()
     }

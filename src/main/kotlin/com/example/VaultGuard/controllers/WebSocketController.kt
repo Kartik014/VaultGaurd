@@ -1,9 +1,11 @@
 package com.example.VaultGuard.controllers
 
+import com.example.VaultGuard.DTO.AddRowDataDTO
 import com.example.VaultGuard.DTO.BaseSocketDTO
 import com.example.VaultGuard.DTO.DbUpdateEvent
 import com.example.VaultGuard.DTO.EditTableDTO
 import com.example.VaultGuard.DTO.FetchTableDTO
+import com.example.VaultGuard.DTO.RemoveRowDataDTO
 import com.example.VaultGuard.services.DatabaseConnectionService
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.context.event.EventListener
@@ -81,23 +83,55 @@ class WebSocketController(private val objectMapper: ObjectMapper, private val da
                 }
                 "edit_data" -> {
                     val receivedText = objectMapper.readValue(message.payload, EditTableDTO::class.java)
-                    val dbid = receivedText.dbId
-                    val tablename = receivedText.tableName
-                    val rowidentifier = receivedText.rowIdentifier
-                    val columnupdates = receivedText.columnUpdates
+                    val dbId = receivedText.dbId
+                    val tableName = receivedText.tableName
+                    val rowIdentifier = receivedText.rowIdentifier
+                    val columnUpdates = receivedText.columnUpdates
 
                     val editTableDTO = EditTableDTO(
                         type = "edit_data",
-                        dbId = dbid,
-                        tableName = tablename,
-                        rowIdentifier = rowidentifier,
-                        columnUpdates = columnupdates
+                        dbId = dbId,
+                        tableName = tableName,
+                        rowIdentifier = rowIdentifier,
+                        columnUpdates = columnUpdates
                     )
 
                     val response = databaseConnectionService.editDbData(editTableDTO)
                     sendToUser(userId, response)
 
                     databaseConnectionService.fetchEditedData(userId, editTableDTO)
+                }
+                "add_data" -> {
+                    val receivedText = objectMapper.readValue(message.payload, AddRowDataDTO::class.java)
+                    val dbId = receivedText.dbId
+                    val tableName = receivedText.tableName
+                    val newData = receivedText.newData
+
+                    val addRowDataDTO = AddRowDataDTO(
+                        type = "add_data",
+                        dbId = dbId,
+                        tableName = tableName,
+                        newData = newData
+                    )
+
+                    val response = databaseConnectionService.addDataToDB(addRowDataDTO)
+                    sendToUser(userId, response)
+                }
+                "remove_data" -> {
+                    val receivedText = objectMapper.readValue(message.payload, RemoveRowDataDTO::class.java)
+                    val dbId = receivedText.dbId
+                    val tableName = receivedText.tableName
+                    val removeDataKey = receivedText.removeDataKey
+
+                    val removeRowDataDTO = RemoveRowDataDTO(
+                        type = "remove_data",
+                        dbId = dbId,
+                        tableName = tableName,
+                        removeDataKey = removeDataKey
+                    )
+
+                    val response = databaseConnectionService.removeDataFromDB(removeRowDataDTO)
+                    sendToUser(userId, response)
                 }
                 else -> {
                     session.sendMessage(TextMessage("Unknown message type: $type"))
@@ -139,15 +173,15 @@ class WebSocketController(private val objectMapper: ObjectMapper, private val da
         }
     }
 
-    fun broadcastTableUpdate(tablename: String, dbid: String, data: Any) {
+    fun broadcastTableUpdate(tableName: String, dbId: String, data: Any) {
         val response = mapOf(
                 "type" to "db_update",
-                "tablename" to tablename,
+                "tablename" to tableName,
                 "data" to data,
                 "timestamp" to System.currentTimeMillis()
             )
 
-        val tableKey = "$dbid:$tablename"
+        val tableKey = "$dbId:$tableName"
 
         tableUserViewMap[tableKey]?.forEach { userId ->
             sendToUser(userId, response)
