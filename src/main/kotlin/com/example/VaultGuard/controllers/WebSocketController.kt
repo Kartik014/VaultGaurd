@@ -5,6 +5,7 @@ import com.example.VaultGuard.DTO.BaseSocketDTO
 import com.example.VaultGuard.DTO.DbUpdateEvent
 import com.example.VaultGuard.DTO.EditTableDTO
 import com.example.VaultGuard.DTO.FetchTableDTO
+import com.example.VaultGuard.DTO.PageLimitDTO
 import com.example.VaultGuard.DTO.RemoveRowDataDTO
 import com.example.VaultGuard.services.DatabaseConnectionService
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -23,6 +24,7 @@ class WebSocketController(private val objectMapper: ObjectMapper, private val da
     private val userSessions = ConcurrentHashMap<String, WebSocketSession>()
     private val userTableViewMap = ConcurrentHashMap<String, String>()
     private val tableUserViewMap = ConcurrentHashMap<String, MutableSet<String>>()
+    private val userPageLimitMap = ConcurrentHashMap<String, ConcurrentHashMap<String, PageLimitDTO>>()
 
     override fun afterConnectionEstablished(session: WebSocketSession) {
         val userId = session.attributes["userId"] as? String
@@ -67,13 +69,15 @@ class WebSocketController(private val objectMapper: ObjectMapper, private val da
                     val receivedText = objectMapper.readValue(message.payload, FetchTableDTO::class.java)
                     val dbId = receivedText.dbId ?: throw IllegalArgumentException("Database ID is required")
                     val tableName = receivedText.tableName ?: throw IllegalArgumentException("Table name is required")
+                    val tableKey = "$dbId:$tableName"
                     val page = receivedText.page
                     val limit = receivedText.limit
-                    val tableKey = "$dbId:$tableName"
+
+                    userPageLimitMap.computeIfAbsent(userId) { ConcurrentHashMap() }[tableKey] = PageLimitDTO(page, limit)
 
                     userTableViewMap[userId]?.let { oldTableKey ->
                         tableUserViewMap[oldTableKey]?.remove(userId)
-                        if(tableUserViewMap[oldTableKey]?.isEmpty() == true) {
+                        if (tableUserViewMap[oldTableKey]?.isEmpty() == true) {
                             tableUserViewMap.remove(oldTableKey)
                         }
                     }
@@ -83,14 +87,15 @@ class WebSocketController(private val objectMapper: ObjectMapper, private val da
                     val fetchTableDTO = FetchTableDTO(
                         dbId = dbId,
                         tableName = tableName,
-                        page = page,
-                        limit = limit
+                        page = userPageLimitMap[userId]?.get(tableKey)!!.page,
+                        limit = userPageLimitMap[userId]?.get(tableKey)!!.limit
                     )
 
                     tableUserViewMap.computeIfAbsent(tableKey) { mutableSetOf() }.add(userId)
 
                     databaseConnectionService.fetchTableData(userId, fetchTableDTO)
                 }
+
                 "edit_data" -> {
                     val receivedText = objectMapper.readValue(message.payload, EditTableDTO::class.java)
                     val dbId = receivedText.dbId
@@ -111,6 +116,7 @@ class WebSocketController(private val objectMapper: ObjectMapper, private val da
 
                     databaseConnectionService.fetchEditedData(userId, editTableDTO)
                 }
+
                 "add_data" -> {
                     val receivedText = objectMapper.readValue(message.payload, AddRowDataDTO::class.java)
                     val dbId = receivedText.dbId
@@ -127,6 +133,7 @@ class WebSocketController(private val objectMapper: ObjectMapper, private val da
                     val response = databaseConnectionService.addDataToDB(addRowDataDTO)
                     sendToUser(userId, response)
                 }
+
                 "remove_data" -> {
                     val receivedText = objectMapper.readValue(message.payload, RemoveRowDataDTO::class.java)
                     val dbId = receivedText.dbId
@@ -143,6 +150,7 @@ class WebSocketController(private val objectMapper: ObjectMapper, private val da
                     val response = databaseConnectionService.removeDataFromDB(removeRowDataDTO)
                     sendToUser(userId, response)
                 }
+
                 else -> {
                     session.sendMessage(TextMessage("Unknown message type: $type"))
                 }
@@ -158,12 +166,14 @@ class WebSocketController(private val objectMapper: ObjectMapper, private val da
         if (userId != null) {
             val tableKey = userTableViewMap.remove(userId)
 
-            if(tableKey != null) {
+            if (tableKey != null) {
                 tableUserViewMap[tableKey]?.remove(userId)
                 if (tableUserViewMap[tableKey]?.isEmpty() == true) {
                     tableUserViewMap.remove(tableKey)
                 }
             }
+
+            userPageLimitMap.remove(userId)
             userSessions.remove(userId)
         }
         sessions.remove(session)
@@ -184,17 +194,32 @@ class WebSocketController(private val objectMapper: ObjectMapper, private val da
     }
 
     fun broadcastTableUpdate(tableName: String, dbId: String, data: Any) {
-        val response = mapOf(
-                "type" to "db_update",
-                "tablename" to tableName,
-                "data" to data,
-                "timestamp" to System.currentTimeMillis()
-            )
-
         val tableKey = "$dbId:$tableName"
 
         tableUserViewMap[tableKey]?.forEach { userId ->
-            sendToUser(userId, response)
+            val pageLimit = userPageLimitMap[userId]?.get(tableKey)
+
+            if (pageLimit != null) {
+                val fetchTableDTO = FetchTableDTO(
+                    dbId = dbId,
+                    tableName = tableName,
+                    page = pageLimit.page,
+                    limit = pageLimit.limit
+                )
+
+                val userData = databaseConnectionService.databaseConnectionRepo.fetchTableData(fetchTableDTO)
+
+                val response = mapOf(
+                    "type" to "db_update",
+                    "tablename" to tableName,
+                    "data" to userData,
+                    "page" to pageLimit.page,
+                    "limit" to pageLimit.limit,
+                    "timestamp" to System.currentTimeMillis()
+                )
+
+                sendToUser(userId, response)
+            }
         }
     }
 

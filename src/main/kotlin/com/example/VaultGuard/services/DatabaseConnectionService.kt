@@ -19,7 +19,7 @@ import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 
 @Service
-class DatabaseConnectionService(private val databaseConnectionRepo: DatabaseConnectionRepo, private val entityManager: EntityManager, private val databaseConnectionFactory: DatabaseConnectionFactory, private val jwtUtils: JwtUtils): DatabaseConnectionInterface {
+class DatabaseConnectionService(val databaseConnectionRepo: DatabaseConnectionRepo, private val entityManager: EntityManager, private val databaseConnectionFactory: DatabaseConnectionFactory, private val jwtUtils: JwtUtils): DatabaseConnectionInterface {
 
     @Autowired
     lateinit var applicationEventPublisher: ApplicationEventPublisher
