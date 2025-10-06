@@ -4,8 +4,11 @@ import com.example.VaultGuard.DTO.UserDTO
 import com.example.VaultGuard.Interfaces.AuthServiceInterface
 import com.example.VaultGuard.models.ApiResponse
 import com.example.VaultGuard.models.User
+import com.example.VaultGuard.validators.LogInValidator
+import com.example.VaultGuard.validators.SignUpValidator
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -16,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController
 class AuthController(private val authService: AuthServiceInterface) {
 
     @PostMapping("/signUp")
-    fun signUp(@RequestBody userDTO: UserDTO): ResponseEntity<ApiResponse<User>>{
+    fun signUp(@Validated(SignUpValidator::class) @RequestBody userDTO: UserDTO): ResponseEntity<ApiResponse<User>>{
         return try {
             val newUser = authService.signUp(userDTO)
             ResponseEntity(newUser, HttpStatus.OK)
@@ -28,8 +31,7 @@ class AuthController(private val authService: AuthServiceInterface) {
     }
 
     @PostMapping("/logIn")
-    fun logIn(@RequestBody userDTO: UserDTO): ResponseEntity<ApiResponse<String>>{
-
+    fun logIn(@Validated(LogInValidator::class) @RequestBody userDTO: UserDTO): ResponseEntity<ApiResponse<String>>{
         return try {
             val loggedInUser = authService.logIn(userDTO)
             ResponseEntity(loggedInUser, HttpStatus.OK)

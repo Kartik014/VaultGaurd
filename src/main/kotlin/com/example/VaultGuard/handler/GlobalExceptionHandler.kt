@@ -3,6 +3,7 @@ package com.example.VaultGuard.handler
 import com.example.VaultGuard.models.ApiResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 
@@ -15,6 +16,23 @@ class GlobalExceptionHandler {
             ApiResponse(
                 status = "error",
                 message = e.message ?: "Invalid request"
+            ),
+            HttpStatus.BAD_REQUEST
+        )
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException::class)
+    fun handleValidationException(e: MethodArgumentNotValidException): ResponseEntity<ApiResponse<Nothing>> {
+        val errors = e.bindingResult.fieldErrors
+            .joinToString("; ") { fieldError ->
+                "${fieldError.field}: ${fieldError.defaultMessage}"
+            }
+
+        return ResponseEntity(
+            ApiResponse(
+                status = "error",
+                message = (errors.ifBlank { "Validation failed" }),
+                data = null
             ),
             HttpStatus.BAD_REQUEST
         )
