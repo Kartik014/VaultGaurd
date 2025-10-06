@@ -39,15 +39,7 @@ class SecurityConfig(private val jwtUtils: JwtUtils) {
             .headers { headers ->
                 headers.contentSecurityPolicy {
                     it.policyDirectives(
-                        """
-                        default-src 'self';
-                        script-src 'self' 'unsafe-inline' https:;
-                        style-src 'self' 'unsafe-inline' https:;
-                        img-src 'self' data:;
-                        font-src 'self' https:;
-                        connect-src 'self' wss:;
-                        frame-ancestors 'none';
-                        """.trimIndent()
+                        "default-src 'self'; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data:; font-src 'self' https:; connect-src 'self' wss:; frame-ancestors 'none';"
                     )
                 }
 
@@ -67,7 +59,7 @@ class SecurityConfig(private val jwtUtils: JwtUtils) {
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
-        configuration.allowedOrigins = listOf("http://localhost:8080")
+        configuration.allowedOrigins = listOf("http://localhost:8080", "ws://localhost:8080", "https://vaultguard.duckdns.org", "wss://vaultguard.duckdns.org")
         configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
         configuration.allowedHeaders = listOf("Authorization", "Content-Type", "X-Requested-With")
         configuration.allowCredentials = true
