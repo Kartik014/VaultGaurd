@@ -14,6 +14,7 @@ class WebSocketConfig(private val webSocketController: WebSocketController, priv
     override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
         registry.addHandler(webSocketController, "/ws").setAllowedOrigins("*")
             .addInterceptors(JwtHandshakeInterceptor(jwtUtils))
+            .withSockJS()
     }
 
 }
