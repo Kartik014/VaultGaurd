@@ -33,7 +33,7 @@ class SecurityConfig(private val jwtUtils: JwtUtils) {
             .httpBasic { it.disable() }
             .authorizeHttpRequests { auth ->
                 auth
-                    .requestMatchers("/auth/**", "/ws/**").permitAll()
+                    .requestMatchers("/health/**", "/auth/**", "/ws/**").permitAll()
                     .anyRequest().authenticated()
             }
             .headers { headers ->
