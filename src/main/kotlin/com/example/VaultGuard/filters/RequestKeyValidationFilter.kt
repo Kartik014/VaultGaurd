@@ -24,6 +24,8 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.javaField
 import java.io.ByteArrayInputStream
 import com.example.VaultGuard.DTO.*
+import com.example.VaultGuard.validators.CreateBackupPolicyValidator
+import com.example.VaultGuard.validators.CreateBackupValidator
 
 @Component
 class RequestKeyValidationFilter : OncePerRequestFilter() {
@@ -42,7 +44,10 @@ class RequestKeyValidationFilter : OncePerRequestFilter() {
     private val validator: Validator = Validation.buildDefaultValidatorFactory().validator
 
     override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain) {
-        val matchedEntry = endpointDtoMap.entries.find { request.requestURI.contains(it.key) }
+        val matchedEntry = endpointDtoMap.entries.find { (path, _) ->
+            val regex = pathToRegex(path)
+            regex.matches(request.requestURI)
+        }
 
         if (matchedEntry != null) {
             val dtoClass = matchedEntry.value
@@ -58,11 +63,7 @@ class RequestKeyValidationFilter : OncePerRequestFilter() {
                 val jsonNode = objectMapper.readTree(body)
                 val actualKeys = jsonNode.fieldNames().asSequence().toSet()
 
-                val group = when (request.requestURI) {
-                    "/auth/signUp" -> arrayOf(SignUpValidator::class.java)
-                    "/auth/logIn" -> arrayOf(LogInValidator::class.java)
-                    else -> emptyArray()
-                }
+                val group = resolveValidationGroup(request.requestURI)
 
                 val requiredFields = getRequiredFields(dtoClass.java, group.toSet())
                 val missingKeys = requiredFields.filter { it !in actualKeys }
@@ -135,6 +136,16 @@ class RequestKeyValidationFilter : OncePerRequestFilter() {
             .toSet()
     }
 
+    private fun resolveValidationGroup(uri: String): Array<Class<*>> {
+        return when {
+            uri == "/auth/signUp" -> arrayOf(SignUpValidator::class.java)
+            uri == "/auth/logIn" -> arrayOf(LogInValidator::class.java)
+            uri == "/backup/v1/create-backup-policy" -> arrayOf(CreateBackupPolicyValidator::class.java)
+            Regex("^/backup/v1/[^/]+/create-backup$").matches(uri) -> arrayOf(CreateBackupValidator::class.java)
+            else -> emptyArray()
+        }
+    }
+
     private fun sendError(httpResponse: HttpServletResponse, message: String) {
         httpResponse.contentType = "application/json"
         httpResponse.status = HttpServletResponse.SC_BAD_REQUEST
@@ -143,5 +154,10 @@ class RequestKeyValidationFilter : OncePerRequestFilter() {
                 ApiResponse(status = "error", message = message, data = null)
             )
         )
+    }
+
+    private fun pathToRegex(path: String): Regex {
+        val regex = path.replace(Regex("\\{[^/]+\\}"), "[^/]+")
+        return Regex("^$regex$")
     }
 }

@@ -4,9 +4,12 @@ import com.example.VaultGuard.DTO.DatabaseBackupPolicyDTO
 import com.example.VaultGuard.models.ApiResponse
 import com.example.VaultGuard.models.DatabaseBackupPolicy
 import com.example.VaultGuard.Interfaces.BackupInterface
+import com.example.VaultGuard.validators.CreateBackupPolicyValidator
+import com.example.VaultGuard.validators.CreateBackupValidator
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -20,7 +23,7 @@ class BackupController(private val backupService: BackupInterface) {
 
     @PostMapping("/v1/create-backup-policy")
     @PreAuthorize("hasAuthority('superadmin') or hasAuthority('admin')")
-    fun createBackupPolicy(@RequestBody databaseBackupPolicyDTO: DatabaseBackupPolicyDTO): ResponseEntity<ApiResponse<DatabaseBackupPolicy>> {
+    fun createBackupPolicy(@Validated(CreateBackupPolicyValidator::class) @RequestBody databaseBackupPolicyDTO: DatabaseBackupPolicyDTO): ResponseEntity<ApiResponse<DatabaseBackupPolicy>> {
         return try {
             val createdBackupPolicy = backupService.createBackupPolicy(databaseBackupPolicyDTO)
             ResponseEntity(createdBackupPolicy,HttpStatus.OK)
@@ -43,8 +46,8 @@ class BackupController(private val backupService: BackupInterface) {
         }
     }
 
-    @GetMapping("/v1/{dbId}/create-backup")
-    fun createBackup(@PathVariable dbId: String, @RequestBody databaseBackupPolicyDTO: DatabaseBackupPolicyDTO): ResponseEntity<ApiResponse<String>>{
+    @PostMapping("/v1/{dbId}/create-backup")
+    fun createBackup(@PathVariable dbId: String, @Validated(CreateBackupValidator::class) @RequestBody databaseBackupPolicyDTO: DatabaseBackupPolicyDTO): ResponseEntity<ApiResponse<String>>{
         return try {
             val backupLink = backupService.createBackup(dbId, databaseBackupPolicyDTO)
             ResponseEntity(backupLink, HttpStatus.OK)
