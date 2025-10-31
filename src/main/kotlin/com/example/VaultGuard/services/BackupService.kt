@@ -28,6 +28,7 @@ class BackupService(private val storageService: StorageService, private val back
         count += 1
         val newBackupPolicy = backupPolicyHandler.createPolicy(databaseBackupPolicyDTO, userRef, databaseRef, selectedTables, count)
         val savedBackupPolicy: DatabaseBackupPolicy = backupRepo.save(newBackupPolicy)
+
         return ApiResponse(
             status = "success",
             message = "Backup policy created successfully",
@@ -37,6 +38,7 @@ class BackupService(private val storageService: StorageService, private val back
 
     override fun getBackupPolicies(dbId: String): ApiResponse<List<DatabaseBackupPolicy>> {
         val backupPolicyList : List<DatabaseBackupPolicy> = backupRepo.findByDatabaseConnectionId(dbId)
+
         return ApiResponse(
             status = "success",
             message = "Backup policies fetched successfully",
@@ -66,6 +68,9 @@ class BackupService(private val storageService: StorageService, private val back
             "supabase" -> storageService.uploadFile(userid, dbId, backupFile.name, byteArrayFile, contentType).block()
             else -> throw IllegalArgumentException("Unknown storage type: ${policy.storagetype}")
         }
+
+        backupFile.delete()
+
         return ApiResponse(
             status = "success",
             message = "Backup created successfully",
@@ -78,6 +83,7 @@ class BackupService(private val storageService: StorageService, private val back
         val userId = jwtUtils.getCurrentUserId()
         val prefix = "$userId/$dbId/"
         val requestBody = mapOf("prefix" to prefix)
+
         return webClient.post()
             .uri("/object/list/$bucketName")
             .bodyValue(requestBody)
