@@ -24,6 +24,7 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.javaField
 import java.io.ByteArrayInputStream
 import com.example.VaultGuard.DTO.*
+import com.example.VaultGuard.validators.AddUserValidator
 import com.example.VaultGuard.validators.CreateBackupPolicyValidator
 import com.example.VaultGuard.validators.CreateBackupValidator
 
@@ -140,6 +141,7 @@ class RequestKeyValidationFilter : OncePerRequestFilter() {
         return when {
             uri == "/auth/signUp" -> arrayOf(SignUpValidator::class.java)
             uri == "/auth/logIn" -> arrayOf(LogInValidator::class.java)
+            uri == "superadmin/addUser" -> arrayOf(AddUserValidator::class.java)
             uri == "/backup/v1/create-backup-policy" -> arrayOf(CreateBackupPolicyValidator::class.java)
             Regex("^/backup/v1/[^/]+/create-backup$").matches(uri) -> arrayOf(CreateBackupValidator::class.java)
             else -> emptyArray()

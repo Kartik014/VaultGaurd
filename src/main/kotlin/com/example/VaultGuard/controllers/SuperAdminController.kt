@@ -5,9 +5,11 @@ import com.example.VaultGuard.DTO.UserDTO
 import com.example.VaultGuard.Interfaces.SuperAdminInterface
 import com.example.VaultGuard.models.ApiResponse
 import com.example.VaultGuard.models.User
+import com.example.VaultGuard.validators.AddUserValidator
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -22,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController
 class SuperAdminController(private val superAdminService: SuperAdminInterface) {
 
     @PostMapping("/addUser")
-    fun addUser(@RequestBody userDTO: UserDTO): ResponseEntity<ApiResponse<String>>{
+    fun addUser(@Validated(AddUserValidator::class) @RequestBody userDTO: UserDTO): ResponseEntity<ApiResponse<String>>{
         return try {
             val newUser = superAdminService.addUser(userDTO)
             ResponseEntity(newUser, HttpStatus.OK)
