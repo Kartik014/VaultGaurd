@@ -20,10 +20,8 @@ class AuthService(private val authRepo: AuthRepo, private val userFactory: UserF
             throw IllegalArgumentException("Email already registered")
         }
 
-        if(authRepo.count() == 0L){
-            userDTO.role = UserRoles.SUPERADMIN.string()
-            userDTO.createdBy = "self"
-        }
+        userDTO.role = UserRoles.SUPERADMIN.string()
+        userDTO.createdBy = "self"
 
         val newUser: User = userFactory.createUser(userDTO)
         val savedUser: User = authRepo.save(newUser)
